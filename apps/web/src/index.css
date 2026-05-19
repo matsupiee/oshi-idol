@@ -1,1 +1,70 @@
 @import "@oshi-idol/ui/globals.css";
+
+/* ── Arcade utility classes ─────────────────────────────── */
+
+.arcade-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 8px;
+  font-family: "JetBrains Mono", ui-monospace, monospace;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #ff2e88;
+  border: 1px solid #ff2e88;
+  border-radius: 2px;
+  box-shadow:
+    inset 0 0 6px #ff2e8833,
+    0 0 8px #ff2e8840;
+}
+
+.arcade-scanlines {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 100;
+  background-image: repeating-linear-gradient(
+    0deg,
+    rgba(0, 0, 0, 0.12) 0px,
+    rgba(0, 0, 0, 0.12) 1px,
+    transparent 1px,
+    transparent 3px
+  );
+  mix-blend-mode: multiply;
+}
+
+/* ── Battle panel animations ────────────────────────────── */
+
+@keyframes panel-win {
+  0% {
+    transform: scale(1);
+  }
+  40% {
+    transform: scale(1.04);
+  }
+  100% {
+    transform: scale(1.02);
+  }
+}
+
+@keyframes panel-lose {
+  0% {
+    transform: scale(1);
+    filter: saturate(1) brightness(1);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(0.96);
+    filter: saturate(0.2) brightness(0.4);
+    opacity: 0.5;
+  }
+}
+
+.animate-panel-win {
+  animation: panel-win 380ms ease-out forwards;
+}
+
+.animate-panel-lose {
+  animation: panel-lose 380ms ease-out forwards;
+}
