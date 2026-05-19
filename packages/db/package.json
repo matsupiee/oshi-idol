@@ -16,6 +16,7 @@
   "dependencies": {
     "@libsql/client": "catalog:",
     "@oshi-idol/env": "workspace:*",
+    "@paralleldrive/cuid2": "^3.3.0",
     "dotenv": "catalog:",
     "drizzle-orm": "^0.45.1",
     "libsql": "catalog:",

@@ -1,9 +1,10 @@
+import { createId } from "@paralleldrive/cuid2";
 import { relations, sql } from "drizzle-orm";
 import { index, integer, sqliteTable, text } from "drizzle-orm/sqlite-core";
 
 export const idols = sqliteTable("idols", {
   id: text("id")
-    .$defaultFn(() => crypto.randomUUID())
+    .$defaultFn(() => createId())
     .primaryKey(),
   name: text("name").notNull(),
   group: text("group").notNull(),
@@ -13,13 +14,17 @@ export const idols = sqliteTable("idols", {
   createdAt: integer("created_at", { mode: "timestamp_ms" })
     .default(sql`(cast(unixepoch('subsecond') * 1000 as integer))`)
     .notNull(),
+  updatedAt: integer("updated_at", { mode: "timestamp_ms" })
+    .default(sql`(cast(unixepoch('subsecond') * 1000 as integer))`)
+    .$onUpdate(() => new Date())
+    .notNull(),
 });
 
 export const idolPhotos = sqliteTable(
   "idol_photos",
   {
     id: text("id")
-      .$defaultFn(() => crypto.randomUUID())
+      .$defaultFn(() => createId())
       .primaryKey(),
     idolId: text("idol_id")
       .notNull()
@@ -29,6 +34,10 @@ export const idolPhotos = sqliteTable(
     createdAt: integer("created_at", { mode: "timestamp_ms" })
       .default(sql`(cast(unixepoch('subsecond') * 1000 as integer))`)
       .notNull(),
+    updatedAt: integer("updated_at", { mode: "timestamp_ms" })
+      .default(sql`(cast(unixepoch('subsecond') * 1000 as integer))`)
+      .$onUpdate(() => new Date())
+      .notNull(),
   },
   (table) => [index("idol_photos_idolId_idx").on(table.idolId)],
 );
@@ -37,7 +46,7 @@ export const votes = sqliteTable(
   "votes",
   {
     id: text("id")
-      .$defaultFn(() => crypto.randomUUID())
+      .$defaultFn(() => createId())
       .primaryKey(),
     winnerId: text("winner_id")
       .notNull()
@@ -54,6 +63,10 @@ export const votes = sqliteTable(
     sessionId: text("session_id").notNull(),
     createdAt: integer("created_at", { mode: "timestamp_ms" })
       .default(sql`(cast(unixepoch('subsecond') * 1000 as integer))`)
+      .notNull(),
+    updatedAt: integer("updated_at", { mode: "timestamp_ms" })
+      .default(sql`(cast(unixepoch('subsecond') * 1000 as integer))`)
+      .$onUpdate(() => new Date())
       .notNull(),
   },
   (table) => [
