@@ -8,114 +8,114 @@
 // You should NOT make any changes in this file as it will be overwritten.
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
-import { Route as rootRouteImport } from "./routes/__root";
-import { Route as RankingRouteImport } from "./routes/ranking";
-import { Route as BattleRouteImport } from "./routes/battle";
-import { Route as IndexRouteImport } from "./routes/index";
-import { Route as ApiTrpcSplatRouteImport } from "./routes/api/trpc/$";
-import { Route as ApiAuthSplatRouteImport } from "./routes/api/auth/$";
+import { Route as rootRouteImport } from './routes/__root'
+import { Route as RankingRouteImport } from './routes/ranking'
+import { Route as BattleRouteImport } from './routes/battle'
+import { Route as IndexRouteImport } from './routes/index'
+import { Route as ApiTrpcSplatRouteImport } from './routes/api/trpc/$'
+import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
 
 const RankingRoute = RankingRouteImport.update({
-  id: "/ranking",
-  path: "/ranking",
+  id: '/ranking',
+  path: '/ranking',
   getParentRoute: () => rootRouteImport,
-} as any);
+} as any)
 const BattleRoute = BattleRouteImport.update({
-  id: "/battle",
-  path: "/battle",
+  id: '/battle',
+  path: '/battle',
   getParentRoute: () => rootRouteImport,
-} as any);
+} as any)
 const IndexRoute = IndexRouteImport.update({
-  id: "/",
-  path: "/",
+  id: '/',
+  path: '/',
   getParentRoute: () => rootRouteImport,
-} as any);
+} as any)
 const ApiTrpcSplatRoute = ApiTrpcSplatRouteImport.update({
-  id: "/api/trpc/$",
-  path: "/api/trpc/$",
+  id: '/api/trpc/$',
+  path: '/api/trpc/$',
   getParentRoute: () => rootRouteImport,
-} as any);
+} as any)
 const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
-  id: "/api/auth/$",
-  path: "/api/auth/$",
+  id: '/api/auth/$',
+  path: '/api/auth/$',
   getParentRoute: () => rootRouteImport,
-} as any);
+} as any)
 
 export interface FileRoutesByFullPath {
-  "/": typeof IndexRoute;
-  "/battle": typeof BattleRoute;
-  "/ranking": typeof RankingRoute;
-  "/api/auth/$": typeof ApiAuthSplatRoute;
-  "/api/trpc/$": typeof ApiTrpcSplatRoute;
+  '/': typeof IndexRoute
+  '/battle': typeof BattleRoute
+  '/ranking': typeof RankingRoute
+  '/api/auth/$': typeof ApiAuthSplatRoute
+  '/api/trpc/$': typeof ApiTrpcSplatRoute
 }
 export interface FileRoutesByTo {
-  "/": typeof IndexRoute;
-  "/battle": typeof BattleRoute;
-  "/ranking": typeof RankingRoute;
-  "/api/auth/$": typeof ApiAuthSplatRoute;
-  "/api/trpc/$": typeof ApiTrpcSplatRoute;
+  '/': typeof IndexRoute
+  '/battle': typeof BattleRoute
+  '/ranking': typeof RankingRoute
+  '/api/auth/$': typeof ApiAuthSplatRoute
+  '/api/trpc/$': typeof ApiTrpcSplatRoute
 }
 export interface FileRoutesById {
-  __root__: typeof rootRouteImport;
-  "/": typeof IndexRoute;
-  "/battle": typeof BattleRoute;
-  "/ranking": typeof RankingRoute;
-  "/api/auth/$": typeof ApiAuthSplatRoute;
-  "/api/trpc/$": typeof ApiTrpcSplatRoute;
+  __root__: typeof rootRouteImport
+  '/': typeof IndexRoute
+  '/battle': typeof BattleRoute
+  '/ranking': typeof RankingRoute
+  '/api/auth/$': typeof ApiAuthSplatRoute
+  '/api/trpc/$': typeof ApiTrpcSplatRoute
 }
 export interface FileRouteTypes {
-  fileRoutesByFullPath: FileRoutesByFullPath;
-  fullPaths: "/" | "/battle" | "/ranking" | "/api/auth/$" | "/api/trpc/$";
-  fileRoutesByTo: FileRoutesByTo;
-  to: "/" | "/battle" | "/ranking" | "/api/auth/$" | "/api/trpc/$";
-  id: "__root__" | "/" | "/battle" | "/ranking" | "/api/auth/$" | "/api/trpc/$";
-  fileRoutesById: FileRoutesById;
+  fileRoutesByFullPath: FileRoutesByFullPath
+  fullPaths: '/' | '/battle' | '/ranking' | '/api/auth/$' | '/api/trpc/$'
+  fileRoutesByTo: FileRoutesByTo
+  to: '/' | '/battle' | '/ranking' | '/api/auth/$' | '/api/trpc/$'
+  id: '__root__' | '/' | '/battle' | '/ranking' | '/api/auth/$' | '/api/trpc/$'
+  fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
-  IndexRoute: typeof IndexRoute;
-  BattleRoute: typeof BattleRoute;
-  RankingRoute: typeof RankingRoute;
-  ApiAuthSplatRoute: typeof ApiAuthSplatRoute;
-  ApiTrpcSplatRoute: typeof ApiTrpcSplatRoute;
+  IndexRoute: typeof IndexRoute
+  BattleRoute: typeof BattleRoute
+  RankingRoute: typeof RankingRoute
+  ApiAuthSplatRoute: typeof ApiAuthSplatRoute
+  ApiTrpcSplatRoute: typeof ApiTrpcSplatRoute
 }
 
-declare module "@tanstack/react-router" {
+declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    "/ranking": {
-      id: "/ranking";
-      path: "/ranking";
-      fullPath: "/ranking";
-      preLoaderRoute: typeof RankingRouteImport;
-      parentRoute: typeof rootRouteImport;
-    };
-    "/battle": {
-      id: "/battle";
-      path: "/battle";
-      fullPath: "/battle";
-      preLoaderRoute: typeof BattleRouteImport;
-      parentRoute: typeof rootRouteImport;
-    };
-    "/": {
-      id: "/";
-      path: "/";
-      fullPath: "/";
-      preLoaderRoute: typeof IndexRouteImport;
-      parentRoute: typeof rootRouteImport;
-    };
-    "/api/trpc/$": {
-      id: "/api/trpc/$";
-      path: "/api/trpc/$";
-      fullPath: "/api/trpc/$";
-      preLoaderRoute: typeof ApiTrpcSplatRouteImport;
-      parentRoute: typeof rootRouteImport;
-    };
-    "/api/auth/$": {
-      id: "/api/auth/$";
-      path: "/api/auth/$";
-      fullPath: "/api/auth/$";
-      preLoaderRoute: typeof ApiAuthSplatRouteImport;
-      parentRoute: typeof rootRouteImport;
-    };
+    '/ranking': {
+      id: '/ranking'
+      path: '/ranking'
+      fullPath: '/ranking'
+      preLoaderRoute: typeof RankingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/battle': {
+      id: '/battle'
+      path: '/battle'
+      fullPath: '/battle'
+      preLoaderRoute: typeof BattleRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/trpc/$': {
+      id: '/api/trpc/$'
+      path: '/api/trpc/$'
+      fullPath: '/api/trpc/$'
+      preLoaderRoute: typeof ApiTrpcSplatRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/auth/$': {
+      id: '/api/auth/$'
+      path: '/api/auth/$'
+      fullPath: '/api/auth/$'
+      preLoaderRoute: typeof ApiAuthSplatRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -125,16 +125,16 @@ const rootRouteChildren: RootRouteChildren = {
   RankingRoute: RankingRoute,
   ApiAuthSplatRoute: ApiAuthSplatRoute,
   ApiTrpcSplatRoute: ApiTrpcSplatRoute,
-};
+}
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
-  ._addFileTypes<FileRouteTypes>();
+  ._addFileTypes<FileRouteTypes>()
 
-import type { getRouter } from "./router.tsx";
-import type { createStart } from "@tanstack/react-start";
-declare module "@tanstack/react-start" {
+import type { getRouter } from './router.tsx'
+import type { createStart } from '@tanstack/react-start'
+declare module '@tanstack/react-start' {
   interface Register {
-    ssr: true;
-    router: Awaited<ReturnType<typeof getRouter>>;
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
   }
 }
