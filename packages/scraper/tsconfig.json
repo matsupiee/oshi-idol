@@ -1,0 +1,10 @@
+{
+  "extends": "@oshi-idol/config/tsconfig.base.json",
+  "compilerOptions": {
+    "lib": ["ESNext", "dom"],
+    "types": ["node", "bun-types"],
+    "allowImportingTsExtensions": true,
+    "outDir": "dist"
+  },
+  "include": ["src"]
+}
