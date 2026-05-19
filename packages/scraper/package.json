@@ -19,6 +19,7 @@
   "devDependencies": {
     "@oshi-idol/config": "workspace:*",
     "@types/node": "catalog:",
+    "bun-types": "latest",
     "typescript": "catalog:"
   }
 }
