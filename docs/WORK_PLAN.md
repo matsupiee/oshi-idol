@@ -7,14 +7,14 @@
 
 **技術スタック**
 
-| レイヤー | 採用技術 |
-|---|---|
+| レイヤー       | 採用技術                                    |
+| -------------- | ------------------------------------------- |
 | フロントエンド | TanStack Start + TanStack Router + React 19 |
-| APIレイヤー | tRPC（Cloudflare Workers） |
-| DB | Drizzle ORM + Cloudflare D1（SQLite） |
-| 認証 | better-auth |
-| UI | shadcn/ui + Tailwind CSS v4 |
-| インフラ | Cloudflare（Workers + D1 + R2） |
+| APIレイヤー    | tRPC（Cloudflare Workers）                  |
+| DB             | Drizzle ORM + Cloudflare D1（SQLite）       |
+| 認証           | better-auth                                 |
+| UI             | shadcn/ui + Tailwind CSS v4                 |
+| インフラ       | Cloudflare（Workers + D1 + R2）             |
 
 ---
 
@@ -36,12 +36,12 @@ Phase 5: シェア機能
 
 ### タスク
 
-| # | タスク | 詳細 |
-|---|---|---|
-| 1-1 | idols テーブル作成 | `id`, `name`, `group`, `imageUrl`, `eloRating`（初期値1500）, `createdAt` |
-| 1-2 | votes テーブル作成 | `id`, `winnerId`, `loserId`, `sessionId`, `createdAt` |
-| 1-3 | Drizzleマイグレーション実行 | `drizzle-kit generate` → `drizzle-kit migrate` |
-| 1-4 | seedデータ作成 | LE SSERAFIM / aespa / NewJeans等 10〜20名のサンプルデータ |
+| #   | タスク                      | 詳細                                                                      |
+| --- | --------------------------- | ------------------------------------------------------------------------- |
+| 1-1 | idols テーブル作成          | `id`, `name`, `group`, `imageUrl`, `eloRating`（初期値1500）, `createdAt` |
+| 1-2 | votes テーブル作成          | `id`, `winnerId`, `loserId`, `sessionId`, `createdAt`                     |
+| 1-3 | Drizzleマイグレーション実行 | `drizzle-kit generate` → `drizzle-kit migrate`                            |
+| 1-4 | seedデータ作成              | LE SSERAFIM / aespa / NewJeans等 10〜20名のサンプルデータ                 |
 
 ### スキーマ詳細
 
@@ -88,13 +88,13 @@ votes = {
 
 ### タスク
 
-| # | タスク | 詳細 |
-|---|---|---|
-| 2-1 | ELO Rating ロジック実装 | `packages/api/src/lib/elo.ts` に純粋関数として実装。K=32 |
-| 2-2 | `idols.list` API | 全アイドル一覧取得（ランキング順） |
-| 2-3 | `idols.battlePair` API | ランダムな2人を返す（同じセッション内で直近対戦済みは除外） |
-| 2-4 | `votes.submit` API | 投票を記録し、両者のELO Ratingを更新 |
-| 2-5 | `ranking.top10` API | ELO順TOP10を返す |
+| #   | タスク                       | 詳細                                                            |
+| --- | ---------------------------- | --------------------------------------------------------------- |
+| 2-1 | ELO Rating ロジック実装      | `packages/api/src/lib/elo.ts` に純粋関数として実装。K=32        |
+| 2-2 | `idols.list` API             | 全アイドル一覧取得（ランキング順）                              |
+| 2-3 | `idols.battlePair` API       | ランダムな2人を返す（同じセッション内で直近対戦済みは除外）     |
+| 2-4 | `votes.submit` API           | 投票を記録し、両者のELO Ratingを更新                            |
+| 2-5 | `ranking.top10` API          | ELO順TOP10を返す                                                |
 | 2-6 | sessionId 管理ユーティリティ | `apps/web/src/lib/session.ts`：localStorageで匿名IDを生成・保持 |
 
 ### ELO計算式
@@ -111,17 +111,17 @@ newRating = currentRating + K * (actual - expected)
 ```typescript
 appRouter = {
   idols: {
-    list: publicProcedure,       // GET /api/trpc/idols.list
+    list: publicProcedure, // GET /api/trpc/idols.list
     battlePair: publicProcedure, // GET /api/trpc/idols.battlePair
   },
   votes: {
-    submit: publicProcedure,     // POST /api/trpc/votes.submit
-                                  // input: { winnerId, loserId, sessionId }
+    submit: publicProcedure, // POST /api/trpc/votes.submit
+    // input: { winnerId, loserId, sessionId }
   },
   ranking: {
-    top10: publicProcedure,      // GET /api/trpc/ranking.top10
+    top10: publicProcedure, // GET /api/trpc/ranking.top10
   },
-}
+};
 ```
 
 ---
@@ -132,15 +132,15 @@ appRouter = {
 
 ### タスク
 
-| # | タスク | 詳細 |
-|---|---|---|
-| 3-1 | Home画面 `/` | Startボタン → `/battle` へ遷移。既存の ASCII アートは削除 |
-| 3-2 | Battle画面 `/battle` | 上下2分割、フルスクリーン画像、VS表示、名前、プログレスバー |
-| 3-3 | 投票インタラクション | タップで選択 → アニメーション → 次のペアへ（0.1秒レベル） |
-| 3-4 | 10票完了後の遷移 | `/ranking` へ自動遷移 |
-| 3-5 | Ranking画面 `/ranking` | TOP10リスト、順位・名前・ELO・勝率を表示 |
-| 3-6 | Tier List表示 | S/A/B/C/D のTier別グルーピング（ELO基準で区切り） |
-| 3-7 | 再バトルボタン | Ranking画面から `/battle` へ戻る |
+| #   | タスク                 | 詳細                                                        |
+| --- | ---------------------- | ----------------------------------------------------------- |
+| 3-1 | Home画面 `/`           | Startボタン → `/battle` へ遷移。既存の ASCII アートは削除   |
+| 3-2 | Battle画面 `/battle`   | 上下2分割、フルスクリーン画像、VS表示、名前、プログレスバー |
+| 3-3 | 投票インタラクション   | タップで選択 → アニメーション → 次のペアへ（0.1秒レベル）   |
+| 3-4 | 10票完了後の遷移       | `/ranking` へ自動遷移                                       |
+| 3-5 | Ranking画面 `/ranking` | TOP10リスト、順位・名前・ELO・勝率を表示                    |
+| 3-6 | Tier List表示          | S/A/B/C/D のTier別グルーピング（ELO基準で区切り）           |
+| 3-7 | 再バトルボタン         | Ranking画面から `/battle` へ戻る                            |
 
 ### ルート構成
 
@@ -169,6 +169,7 @@ appRouter = {
 ```
 
 **パフォーマンス要件**:
+
 - 次のペアは事前prefetch（TanStack Query の `prefetchQuery`）
 - 画像は `loading="eager"` + `fetchpriority="high"` で先読み
 
@@ -180,13 +181,13 @@ appRouter = {
 
 ### タスク
 
-| # | タスク | 詳細 |
-|---|---|---|
+| #   | タスク                        | 詳細                                                                   |
+| --- | ----------------------------- | ---------------------------------------------------------------------- |
 | 4-1 | Admin画面 `/admin` の認証保護 | better-auth のセッションで保護。`admin` ロールのユーザーのみアクセス可 |
-| 4-2 | アイドル一覧表示 | 登録済みアイドルの一覧テーブル |
-| 4-3 | GUIからの1件登録フォーム | 名前・グループ・画像URLを入力して登録 |
-| 4-4 | CSVアップロード | `name,group,imageUrl` の形式でバルク登録 |
-| 4-5 | アイドル削除 | 登録済みアイドルの削除（投票データも連動削除） |
+| 4-2 | アイドル一覧表示              | 登録済みアイドルの一覧テーブル                                         |
+| 4-3 | GUIからの1件登録フォーム      | 名前・グループ・画像URLを入力して登録                                  |
+| 4-4 | CSVアップロード               | `name,group,imageUrl` の形式でバルク登録                               |
+| 4-5 | アイドル削除                  | 登録済みアイドルの削除（投票データも連動削除）                         |
 
 ### CSVフォーマット
 
@@ -209,11 +210,11 @@ Chaewon,LE SSERAFIM,https://...photo1.jpg
 
 ### タスク
 
-| # | タスク | 詳細 |
-|---|---|---|
-| 5-1 | TOP10画像生成 | `html-to-image` または Canvas API でランキング画像を生成 |
-| 5-2 | X（Twitter）共有 | Web Intent URLで投稿テキスト + 画像 |
-| 5-3 | 画像ダウンロード | `<a download>` でローカル保存 |
+| #   | タスク           | 詳細                                                     |
+| --- | ---------------- | -------------------------------------------------------- |
+| 5-1 | TOP10画像生成    | `html-to-image` または Canvas API でランキング画像を生成 |
+| 5-2 | X（Twitter）共有 | Web Intent URLで投稿テキスト + 画像                      |
+| 5-3 | 画像ダウンロード | `<a download>` でローカル保存                            |
 
 ---
 
@@ -242,9 +243,9 @@ Phase 4・5 はその後に追加する。
 
 ## 未決事項（実装前に決定が必要なもの）
 
-| 項目 | 現状 | 決定が必要なタイミング |
-|---|---|---|
-| 画像ホスティング | 未定（imageUrlは外部URL想定） | Phase 1 開始前 |
-| Adminロールの付与方法 | better-auth の仕組みを確認 | Phase 4 開始前 |
-| Tier List の ELO区切り値 | 未定 | Phase 3 Step 3-6 前 |
-| 対戦ペア選択アルゴリズム | ランダム（直近除外）で十分か | Phase 2 開始前 |
+| 項目                     | 現状                          | 決定が必要なタイミング |
+| ------------------------ | ----------------------------- | ---------------------- |
+| 画像ホスティング         | 未定（imageUrlは外部URL想定） | Phase 1 開始前         |
+| Adminロールの付与方法    | better-auth の仕組みを確認    | Phase 4 開始前         |
+| Tier List の ELO区切り値 | 未定                          | Phase 3 Step 3-6 前    |
+| 対戦ペア選択アルゴリズム | ランダム（直近除外）で十分か  | Phase 2 開始前         |

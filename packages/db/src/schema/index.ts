@@ -1,2 +1,4 @@
 export * from "./auth";
-export {};
+export * from "./idols";
+export * from "./idol_photos";
+export * from "./votes";
