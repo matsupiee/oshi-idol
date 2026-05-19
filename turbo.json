@@ -17,10 +17,14 @@
       "cache": false,
       "persistent": true
     },
-    "db:push": {
+    "db:generate": {
       "cache": false
     },
-    "db:generate": {
+    "db:studio": {
+      "cache": false,
+      "persistent": true
+    },
+    "db:seed:local": {
       "cache": false
     },
     "deploy": {
