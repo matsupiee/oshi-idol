@@ -36,8 +36,8 @@ routes/xxx/
 
 shared/
 └── \_components/ # 複数の機能・ページをまたいで使われる汎用コンポーネントのみ
-    ├── header.tsx
-    └── ...
+├── header.tsx
+└── ...
 
 CRITICAL: When placing form fields horizontally, ALWAYS add items-start.
 
