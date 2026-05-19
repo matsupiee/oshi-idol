@@ -26,10 +26,14 @@
 3. Verify:
 
 - 以下がグリーンであることを確認するまで決して完了としない
-  - `pnpm check`
-  - `pnpm check-types`
-  - `pnpm test`
-  - `pnpm build`
+  - `bun run check`
+  - `bun run check-types`
+  - `bun run test`
+  - `bun run build`
+- `bun run dev` の起動確認: `packages/infra` ディレクトリで以下を実行し、`error:` / `AssertionError` / `command not found` が含まれていないことを確認する
+  ```bash
+  (cd packages/infra && timeout 30 bun run dev 2>&1 || true) | grep -vE "SIGTERM|Polite quit"
+  ```
 
 4. Document Update：
 
