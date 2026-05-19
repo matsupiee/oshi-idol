@@ -47,7 +47,7 @@
 
 6. PR レビュー & マージ:
 
-- PR 作成後、`gh pr review --approve` でセルフ承認し、`gh pr merge --merge --delete-branch` でそのままマージする。
+- PR 作成後に hooks で起動するサブエージェントによるレビューと修正が完了したら `gh pr merge --merge --delete-branch` でそのままマージする。
 - ユーザーが「マージして」と指示してくるのを待つ必要はない。
 
 ## 何を信頼して正しさを検証するか？(フィードバックセンサー)
