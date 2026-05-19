@@ -406,7 +406,7 @@ function RankRow({ idol }: { idol: RankIdol }) {
             color: "rgba(255,255,255,0.4)",
           }}
         >
-          {Number(idol.winRate)}%
+          {Math.round(idol.winRate * 100)}%
         </div>
       </div>
     </div>
@@ -495,7 +495,7 @@ function StatsGrid({ top10 }: { top10: RankIdol[] }) {
 
   const avgWinRate =
     top10.length > 0
-      ? Math.round(top10.reduce((s, i) => s + Number(i.winRate), 0) / top10.length)
+      ? Math.round((top10.reduce((s, i) => s + i.winRate, 0) / top10.length) * 100)
       : 0;
 
   const cells = [
