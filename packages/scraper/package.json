@@ -1,0 +1,23 @@
+{
+  "name": "@oshi-idol/scraper",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "scrape": "bun run src/scrape/main.ts",
+    "import-to-db": "bun run src/import-to-db/main.ts",
+    "check-types": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@aws-sdk/client-s3": "^3.750.0",
+    "@oshi-idol/db": "workspace:*",
+    "cheerio": "^1.0.0",
+    "dotenv": "catalog:",
+    "drizzle-orm": "^0.45.1",
+    "playwright": "^1.52.0"
+  },
+  "devDependencies": {
+    "@oshi-idol/config": "workspace:*",
+    "@types/node": "catalog:",
+    "typescript": "catalog:"
+  }
+}
