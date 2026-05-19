@@ -2,6 +2,7 @@
   "extends": "@oshi-idol/config/tsconfig.base.json",
   "compilerOptions": {
     "types": ["node"],
+    "lib": ["ESNext", "dom"],
     "outDir": "dist"
   },
   "include": ["src"]
