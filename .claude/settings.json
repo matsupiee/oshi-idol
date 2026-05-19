@@ -1,0 +1,41 @@
+{
+  "permissions": {
+    "allow": ["Bash(*)"],
+    "bash": {
+      "allow": ["*"],
+      "deny": [
+        "rm -rf /",
+        "rm -rf ~",
+        "sudo rm -rf /",
+        "shutdown",
+        "reboot",
+        "mkfs*",
+        "dd if=* of=/dev/*",
+        ">: /dev/sd*",
+        "chmod -R 777 /",
+        "chown -R * /",
+        "git clean -fdx"
+      ]
+    }
+  },
+  "enabledPlugins": {
+    "superpowers@claude-plugins-official": true
+  },
+  "fileSystem": {
+    "read": ["**"],
+    "write": ["**"]
+  },
+  "hooks": {
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "agent",
+            "prompt": "Evaluate if Claude made PR: $ARGUMENTS. If so, post review comment to the PR, fix, verify behavior.",
+            "timeout": 600
+          }
+        ]
+      }
+    ]
+  }
+}
