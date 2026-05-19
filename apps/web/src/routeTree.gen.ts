@@ -10,10 +10,7 @@
 
 import { Route as rootRouteImport } from "./routes/__root";
 import { Route as RankingRouteImport } from "./routes/ranking";
-import { Route as LoginRouteImport } from "./routes/login";
-import { Route as DashboardRouteImport } from "./routes/dashboard";
 import { Route as BattleRouteImport } from "./routes/battle";
-import { Route as AdminRouteImport } from "./routes/admin";
 import { Route as IndexRouteImport } from "./routes/index";
 import { Route as ApiTrpcSplatRouteImport } from "./routes/api/trpc/$";
 import { Route as ApiAuthSplatRouteImport } from "./routes/api/auth/$";
@@ -23,24 +20,9 @@ const RankingRoute = RankingRouteImport.update({
   path: "/ranking",
   getParentRoute: () => rootRouteImport,
 } as any);
-const LoginRoute = LoginRouteImport.update({
-  id: "/login",
-  path: "/login",
-  getParentRoute: () => rootRouteImport,
-} as any);
-const DashboardRoute = DashboardRouteImport.update({
-  id: "/dashboard",
-  path: "/dashboard",
-  getParentRoute: () => rootRouteImport,
-} as any);
 const BattleRoute = BattleRouteImport.update({
   id: "/battle",
   path: "/battle",
-  getParentRoute: () => rootRouteImport,
-} as any);
-const AdminRoute = AdminRouteImport.update({
-  id: "/admin",
-  path: "/admin",
   getParentRoute: () => rootRouteImport,
 } as any);
 const IndexRoute = IndexRouteImport.update({
@@ -61,20 +43,14 @@ const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
 
 export interface FileRoutesByFullPath {
   "/": typeof IndexRoute;
-  "/admin": typeof AdminRoute;
   "/battle": typeof BattleRoute;
-  "/dashboard": typeof DashboardRoute;
-  "/login": typeof LoginRoute;
   "/ranking": typeof RankingRoute;
   "/api/auth/$": typeof ApiAuthSplatRoute;
   "/api/trpc/$": typeof ApiTrpcSplatRoute;
 }
 export interface FileRoutesByTo {
   "/": typeof IndexRoute;
-  "/admin": typeof AdminRoute;
   "/battle": typeof BattleRoute;
-  "/dashboard": typeof DashboardRoute;
-  "/login": typeof LoginRoute;
   "/ranking": typeof RankingRoute;
   "/api/auth/$": typeof ApiAuthSplatRoute;
   "/api/trpc/$": typeof ApiTrpcSplatRoute;
@@ -82,53 +58,22 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport;
   "/": typeof IndexRoute;
-  "/admin": typeof AdminRoute;
   "/battle": typeof BattleRoute;
-  "/dashboard": typeof DashboardRoute;
-  "/login": typeof LoginRoute;
   "/ranking": typeof RankingRoute;
   "/api/auth/$": typeof ApiAuthSplatRoute;
   "/api/trpc/$": typeof ApiTrpcSplatRoute;
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath;
-  fullPaths:
-    | "/"
-    | "/admin"
-    | "/battle"
-    | "/dashboard"
-    | "/login"
-    | "/ranking"
-    | "/api/auth/$"
-    | "/api/trpc/$";
+  fullPaths: "/" | "/battle" | "/ranking" | "/api/auth/$" | "/api/trpc/$";
   fileRoutesByTo: FileRoutesByTo;
-  to:
-    | "/"
-    | "/admin"
-    | "/battle"
-    | "/dashboard"
-    | "/login"
-    | "/ranking"
-    | "/api/auth/$"
-    | "/api/trpc/$";
-  id:
-    | "__root__"
-    | "/"
-    | "/admin"
-    | "/battle"
-    | "/dashboard"
-    | "/login"
-    | "/ranking"
-    | "/api/auth/$"
-    | "/api/trpc/$";
+  to: "/" | "/battle" | "/ranking" | "/api/auth/$" | "/api/trpc/$";
+  id: "__root__" | "/" | "/battle" | "/ranking" | "/api/auth/$" | "/api/trpc/$";
   fileRoutesById: FileRoutesById;
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute;
-  AdminRoute: typeof AdminRoute;
   BattleRoute: typeof BattleRoute;
-  DashboardRoute: typeof DashboardRoute;
-  LoginRoute: typeof LoginRoute;
   RankingRoute: typeof RankingRoute;
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute;
   ApiTrpcSplatRoute: typeof ApiTrpcSplatRoute;
@@ -143,32 +88,11 @@ declare module "@tanstack/react-router" {
       preLoaderRoute: typeof RankingRouteImport;
       parentRoute: typeof rootRouteImport;
     };
-    "/login": {
-      id: "/login";
-      path: "/login";
-      fullPath: "/login";
-      preLoaderRoute: typeof LoginRouteImport;
-      parentRoute: typeof rootRouteImport;
-    };
-    "/dashboard": {
-      id: "/dashboard";
-      path: "/dashboard";
-      fullPath: "/dashboard";
-      preLoaderRoute: typeof DashboardRouteImport;
-      parentRoute: typeof rootRouteImport;
-    };
     "/battle": {
       id: "/battle";
       path: "/battle";
       fullPath: "/battle";
       preLoaderRoute: typeof BattleRouteImport;
-      parentRoute: typeof rootRouteImport;
-    };
-    "/admin": {
-      id: "/admin";
-      path: "/admin";
-      fullPath: "/admin";
-      preLoaderRoute: typeof AdminRouteImport;
       parentRoute: typeof rootRouteImport;
     };
     "/": {
@@ -197,10 +121,7 @@ declare module "@tanstack/react-router" {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  AdminRoute: AdminRoute,
   BattleRoute: BattleRoute,
-  DashboardRoute: DashboardRoute,
-  LoginRoute: LoginRoute,
   RankingRoute: RankingRoute,
   ApiAuthSplatRoute: ApiAuthSplatRoute,
   ApiTrpcSplatRoute: ApiTrpcSplatRoute,
