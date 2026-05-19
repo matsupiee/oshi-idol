@@ -1,0 +1,26 @@
+{
+  "name": "@oshi-idol/api",
+  "type": "module",
+  "exports": {
+    ".": {
+      "default": "./src/index.ts"
+    },
+    "./*": {
+      "default": "./src/*.ts"
+    }
+  },
+  "scripts": {},
+  "dependencies": {
+    "@oshi-idol/auth": "workspace:*",
+    "@oshi-idol/db": "workspace:*",
+    "@oshi-idol/env": "workspace:*",
+    "@trpc/client": "catalog:",
+    "@trpc/server": "catalog:",
+    "dotenv": "catalog:",
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "@oshi-idol/config": "workspace:*",
+    "typescript": "catalog:"
+  }
+}
