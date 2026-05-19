@@ -54,30 +54,34 @@ function BattleComponent() {
 
       setTimeout(() => setPhase("exit"), 380);
 
-      await submitVote.mutateAsync({
-        winnerId,
-        loserId,
-        winnerPhotoId: winnerPhotoId ?? "",
-        loserPhotoId: loserPhotoId ?? "",
-        sessionId,
-      });
+      try {
+        await submitVote.mutateAsync({
+          winnerId,
+          loserId,
+          winnerPhotoId: winnerPhotoId ?? "",
+          loserPhotoId: loserPhotoId ?? "",
+          sessionId,
+        });
 
-      const newCount = voteCount + 1;
-      setVoteCount(newCount);
+        const newCount = voteCount + 1;
+        setVoteCount(newCount);
 
-      if (newCount >= MAX_VOTES) {
-        navigate({ to: "/ranking" });
-        return;
+        if (newCount >= MAX_VOTES) {
+          navigate({ to: "/ranking" });
+          return;
+        }
+
+        await queryClient.invalidateQueries({
+          queryKey: trpc.idols.battlePair.queryKey({ sessionId }),
+        });
+      } catch {
+        // ネットワークエラー時は idle に戻す
+      } finally {
+        setVoting(null);
+        setWinnerIdx(null);
+        setPhase("idle");
+        setBursts([]);
       }
-
-      await queryClient.invalidateQueries({
-        queryKey: trpc.idols.battlePair.queryKey({ sessionId }),
-      });
-
-      setVoting(null);
-      setWinnerIdx(null);
-      setPhase("idle");
-      setBursts([]);
     },
     [phase, voting, voteCount, sessionId, submitVote, queryClient, navigate, trpc],
   );
@@ -341,14 +345,16 @@ interface HeartBurstProps {
 
 function HeartBurst({ x, y, onDone }: HeartBurstProps) {
   const [alive, setAlive] = useState(true);
+  const onDoneRef = useRef(onDone);
+  onDoneRef.current = onDone;
 
   useEffect(() => {
     const t = setTimeout(() => {
       setAlive(false);
-      onDone();
+      onDoneRef.current();
     }, 900);
     return () => clearTimeout(t);
-  }, [onDone]);
+  }, []); // マウント時のみ — onDoneRef 経由で最新コールバックを呼ぶ
 
   if (!alive) return null;
 
