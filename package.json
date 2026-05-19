@@ -27,11 +27,13 @@
     "build": "turbo build",
     "check-types": "turbo check-types",
     "dev:web": "turbo -F web dev",
-    "db:push": "turbo -F @oshi-idol/db db:push",
     "db:generate": "turbo -F @oshi-idol/db db:generate",
+    "db:migrate:local": "cd apps/web && npx wrangler d1 migrations apply oshi-idol-db-local --local --config .alchemy/local/wrangler.jsonc",
+    "db:studio": "turbo -F @oshi-idol/db db:studio",
+    "db:seed:local": "turbo -F @oshi-idol/db db:seed:local",
     "deploy": "turbo -F @oshi-idol/infra deploy",
     "destroy": "turbo -F @oshi-idol/infra destroy",
-    "check": "oxlint && oxfmt --write"
+    "check": "oxlint --ignore-pattern '.claude' && oxfmt --write"
   },
   "dependencies": {
     "@oshi-idol/env": "workspace:*",

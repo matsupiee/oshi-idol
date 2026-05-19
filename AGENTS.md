@@ -27,7 +27,9 @@
 
 - 以下がグリーンであることを確認するまで決して完了としない
   - `pnpm check`
+  - `pnpm check-types`
   - `pnpm test`
+  - `pnpm build`
 
 4. Document Update：
 
