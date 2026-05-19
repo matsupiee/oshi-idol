@@ -4,7 +4,7 @@ import { drizzle } from "drizzle-orm/sqlite-proxy";
 
 import { idolPhotos, idols } from "@oshi-idol/db/schema/idols";
 
-import { getJson, listKeys } from "../r2.js";
+import { getJson, listKeys } from "../r2";
 
 dotenv.config();
 
@@ -107,4 +107,4 @@ async function main(): Promise<void> {
   console.log("Done");
 }
 
-main();
+main().catch(console.error);
