@@ -23,25 +23,24 @@ async function seed() {
   const db = createDb();
 
   for (const idol of IDOL_DATA) {
-    const idolId = crypto.randomUUID();
     const slug = encodeURIComponent(idol.name);
 
-    await db.insert(idols).values({
-      id: idolId,
-      name: idol.name,
-      group: idol.group,
-    });
+    const [inserted] = await db
+      .insert(idols)
+      .values({
+        name: idol.name,
+        group: idol.group,
+      })
+      .returning();
 
     await db.insert(idolPhotos).values([
       {
-        id: crypto.randomUUID(),
-        idolId,
+        idolId: inserted!.id,
         imageUrl: `https://picsum.photos/seed/${slug}-1/400/600`,
         sortOrder: 0,
       },
       {
-        id: crypto.randomUUID(),
-        idolId,
+        idolId: inserted!.id,
         imageUrl: `https://picsum.photos/seed/${slug}-2/400/600`,
         sortOrder: 1,
       },

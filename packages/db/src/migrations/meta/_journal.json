@@ -8,6 +8,13 @@
       "when": 1779198980007,
       "tag": "0000_faulty_rogue",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1779200977276,
+      "tag": "0001_bizarre_jigsaw",
+      "breakpoints": true
     }
   ]
 }
