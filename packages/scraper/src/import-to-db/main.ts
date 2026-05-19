@@ -9,11 +9,8 @@ import { getJson, listKeys } from "../r2.js";
 dotenv.config();
 
 interface ProfileJson {
-  naviIdolId: string;
   name: string;
   group: string;
-  sourceUrl: string;
-  scrapedAt: string;
   images: Array<{ key: string; originalUrl: string }>;
 }
 
@@ -70,6 +67,7 @@ async function importIdol(profile: ProfileJson): Promise<void> {
 
   if (existing.length > 0) {
     idolId = existing[0]!.id;
+    // assumes no votes exist yet; re-running after voting activity would violate votes→idol_photos FK
     await db.delete(idolPhotos).where(eq(idolPhotos.idolId, idolId));
   } else {
     const inserted = await db
