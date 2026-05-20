@@ -33,6 +33,18 @@ describe("parseIdolList", () => {
     expect(result[0]?.naviIdolId).toBe("xyz99999");
   });
 
+  test("ハイフンを含むIDを正しく抽出できる", () => {
+    const html = `
+      <a href="/idol/hananoi-kaho">card</a>
+      <a href="/idol/hananoi-kaho">name</a>
+      <a href="/idol/namae-nemu">card</a>
+    `;
+    const result = parseIdolList(html);
+    expect(result).toHaveLength(2);
+    expect(result[0]?.naviIdolId).toBe("hananoi-kaho");
+    expect(result[1]?.naviIdolId).toBe("namae-nemu");
+  });
+
   test("アイドルリンクが存在しないページでは空配列を返す", () => {
     const result = parseIdolList("<html><body><p>nothing here</p></body></html>");
     expect(result).toHaveLength(0);
