@@ -1,30 +1,113 @@
-## Deployment (Cloudflare via Alchemy)
+# デプロイ手順 (Cloudflare via Alchemy)
 
-- Target: web + server
-- Dev: bun run dev
-- Deploy: bun run deploy
-- Destroy: bun run destroy
+デプロイ先は Cloudflare Workers (web) + D1 (DB) + R2 (assets)。
+インフラ定義は `packages/infra/alchemy.run.ts` で管理している。
 
-For more details, see the guide on [Deploying to Cloudflare with Alchemy](https://www.better-t-stack.dev/docs/guides/cloudflare-alchemy).
+---
 
-## 自動デプロイ (GitHub Actions)
+## 1. Cloudflare の準備
 
-`main` ブランチへの push をトリガに、`.github/workflows/deploy.yml` が `bun run deploy` を実行して Cloudflare へ自動デプロイする。手動実行は GitHub の Actions タブから `workflow_dispatch` で起動できる。
+### 1-1. アカウント ID の確認
 
-同一 ref に対する並列実行は `concurrency` で抑止しているが、デプロイ途中中断を避けるため `cancel-in-progress: false` として順次実行する。
+1. [Cloudflare ダッシュボード](https://dash.cloudflare.com) にログイン
+2. 右サイドバーの **Account ID** をコピーする
 
-### 必要な GitHub Secrets / Variables
+### 1-2. API トークンの作成
 
-`production` 環境（Environment）に以下を設定する。
+1. ダッシュボード右上のアイコン → **My Profile** → **API Tokens**
+2. **Create Token** → **Create Custom Token**
+3. 以下の権限を付与する
 
-Secrets:
+   | リソース                         | 権限 |
+   | -------------------------------- | ---- |
+   | Account / Workers Scripts : Edit |
+   | Account / D1 : Edit              |
+   | Account / R2 Storage : Edit      |
 
-- `CLOUDFLARE_API_TOKEN` — Workers / D1 / R2 を操作できる API トークン
-- `CLOUDFLARE_ACCOUNT_ID` — Cloudflare アカウント ID
-- `ALCHEMY_PASSWORD` — Alchemy state 暗号化用パスワード（初回デプロイ時に決めた値を使い回す）
-- `BETTER_AUTH_SECRET` — Better Auth 用シークレット
+4. **Continue to summary** → **Create Token** → トークンをコピーして保存する（一度しか表示されない）
 
-Variables（機密でない値）:
+---
 
-- `BETTER_AUTH_URL` — 本番の Auth エンドポイント URL
-- `CORS_ORIGIN` — 許可する CORS オリジン
+## 2. ローカルからデプロイ
+
+### 2-1. 環境変数をシェルにセット
+
+```bash
+export CLOUDFLARE_API_TOKEN=<コピーしたAPIトークン>
+export CLOUDFLARE_ACCOUNT_ID=<アカウントID>
+```
+
+### 2-2. `packages/infra/.env` を編集
+
+`ALCHEMY_PASSWORD` は Alchemy の state ファイルの暗号化に使う。
+**初回デプロイ時に決めた値を以降ずっと使い続ける**（変えると state が読めなくなる）。
+
+```
+ALCHEMY_PASSWORD=<任意の強いパスワード>
+```
+
+### 2-3. `apps/web/.env` を本番向けに更新
+
+デプロイ後の Worker URL は `bun run deploy` 実行後にコンソールに出力される。
+初回は仮の URL を入れてデプロイ → URL 確定後に再度更新して再デプロイする。
+
+```
+BETTER_AUTH_SECRET=<ランダムな強いシークレット（openssl rand -base64 32 で生成可）>
+BETTER_AUTH_URL=https://<本番ドメイン>
+CORS_ORIGIN=https://<本番ドメイン>
+```
+
+### 2-4. デプロイ実行
+
+```bash
+bun run deploy
+```
+
+成功すると末尾に以下が出力される：
+
+```
+Web    -> https://oshi-idol.<your-subdomain>.workers.dev
+```
+
+### 2-5. 初回デプロイ後の URL 更新（初回のみ）
+
+Worker URL が確定したら `apps/web/.env` の `BETTER_AUTH_URL` と `CORS_ORIGIN` を実際の URL に更新し、再度 `bun run deploy` を実行する。
+
+---
+
+## 3. 自動デプロイ (GitHub Actions)
+
+`main` ブランチへの push をトリガに `.github/workflows/deploy.yml` が `bun run deploy` を自動実行する。
+手動実行は GitHub の Actions タブ → **Deploy** → **Run workflow** から起動できる。
+
+同一 ref への並列デプロイは `concurrency` で抑止しており、`cancel-in-progress: false` で途中中断せず順次実行する。
+
+### 3-1. GitHub Secrets / Variables の設定
+
+リポジトリの **Settings → Environments → production** に以下を登録する。
+
+**Secrets（機密値）:**
+
+| キー                    | 値                                     |
+| ----------------------- | -------------------------------------- |
+| `CLOUDFLARE_API_TOKEN`  | 手順 1-2 で作成した API トークン       |
+| `CLOUDFLARE_ACCOUNT_ID` | 手順 1-1 で確認したアカウント ID       |
+| `ALCHEMY_PASSWORD`      | `packages/infra/.env` と同じパスワード |
+| `BETTER_AUTH_SECRET`    | `apps/web/.env` と同じシークレット     |
+
+**Variables（非機密値）:**
+
+| キー              | 値                       |
+| ----------------- | ------------------------ |
+| `BETTER_AUTH_URL` | `https://<本番ドメイン>` |
+| `CORS_ORIGIN`     | `https://<本番ドメイン>` |
+
+---
+
+## 4. インフラの削除
+
+```bash
+bun run destroy
+```
+
+D1 データベース・R2 バケット・Worker がすべて削除される。**データも消えるため注意。**
