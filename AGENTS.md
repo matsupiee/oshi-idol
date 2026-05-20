@@ -19,11 +19,15 @@
 
 - `docs/`の関連ファイルを確認する
 
-2. Implement:
+2. Write Test:
+
+- 達成したい目的や仕様に合わせて、テストを書きます。
+
+3. Implement:
 
 - コード変更は 小さく、レイヤーに収まる単位で 行う。1 PR = 1 論理的変更。
 
-3. Verify:
+4. Verify:
 
 - 以下がグリーンであることを確認するまで決して完了としない
   - `bun run check`
@@ -35,17 +39,17 @@
   (cd packages/infra && timeout 30 bun run dev 2>&1 || true) | grep -vE "SIGTERM|Polite quit"
   ```
 
-4. Document Update：
+5. Document Update：
 
 - 振る舞いやアーキテクチャに影響する変更は docs/ の該当ファイルを 同じPR内で 必ず更新する
 - 設計判断（採用/不採用、トレードオフ）を伴う変更は [`docs/adr/`](./docs/adr/) に ADR を追加または更新する
 
-5. PR作成:
+6. PR作成:
 
 - worktree で作業している場合、実装が完了したらコミット → プッシュ → PR 作成まで一連で実行する。
 - ユーザーが「PR を作って」と指示してくるのを待つ必要はない。
 
-6. PR レビュー & マージ:
+7. PR レビュー & マージ:
 
 - PR 作成後に hooks で起動するサブエージェントによるレビューと修正が完了したら `gh pr merge --merge --delete-branch` でそのままマージする。
 - ユーザーが「マージして」と指示してくるのを待つ必要はない。
