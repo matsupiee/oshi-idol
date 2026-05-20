@@ -6,6 +6,7 @@ export const idols = sqliteTable("idols", {
   id: text("id")
     .$defaultFn(() => createId())
     .primaryKey(),
+  naviIdolId: text("navi_idol_id").unique(),
   name: text("name").notNull(),
   group: text("group").notNull(),
   eloRating: integer("elo_rating").notNull().default(1500),
