@@ -25,6 +25,7 @@
   "scripts": {
     "dev": "turbo dev",
     "build": "turbo build",
+    "test": "turbo test",
     "check-types": "turbo check-types",
     "dev:web": "turbo -F web dev",
     "db:generate": "turbo -F @oshi-idol/db db:generate",

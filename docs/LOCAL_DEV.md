@@ -72,3 +72,23 @@ bun run db:studio
 ### リセット
 
 `.alchemy/miniflare/v3/d1/` 配下の SQLite ファイル（`metadata.sqlite` 以外）を削除してから `bun run dev` を再起動。
+
+## テスト
+
+### フロントエンド統合テスト（apps/web）
+
+`apps/web` の画面ロジックは [Vitest](https://vitest.dev/) + [@testing-library/react](https://testing-library.com/docs/react-testing-library/intro) で統合テストする。
+
+```bash
+# 一括実行（turbo 経由）
+bun run test
+
+# パッケージ単体 / watch
+cd apps/web && bun run test
+cd apps/web && bun run test:watch
+```
+
+- テストは `apps/web/src/routes/__tests__/` 配下に配置する（`__` プレフィックスは TanStack Router がルートとして拾わないため安全）。
+- ルートコンポーネント（`HomeComponent` / `BattleComponent` / `RankingComponent`）は名前付き export し、テストから直接 import する。
+- tRPC とルーターは `vi.mock` で差し替え、`renderWithProviders`（`src/test/helpers.tsx`）で `QueryClient` を渡してレンダリングする。tRPC のレスポンスは各テストの内側で `mockResolvedValue` でインラインに定義する（ヘルパー禁止方針に従う）。
+- DOM 環境は `jsdom`、共通の前処理は `src/test/setup.ts`（`@testing-library/jest-dom` 登録、`matchMedia` / `crypto.randomUUID` の polyfill、テスト後の `cleanup`）に集約。

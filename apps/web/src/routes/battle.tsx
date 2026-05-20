@@ -17,7 +17,7 @@ interface Burst {
   y: number;
 }
 
-function BattleComponent() {
+export function BattleComponent() {
   const navigate = useNavigate();
   const trpc = useTRPC();
   const queryClient = useQueryClient();
