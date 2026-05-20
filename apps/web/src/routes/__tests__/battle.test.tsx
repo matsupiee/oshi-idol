@@ -177,6 +177,69 @@ describe("BattleComponent (投票画面)", () => {
     });
   });
 
+  test("投票が成功すると次のバトルに自動遷移する（次ペアが描画され ROUND が進む）", async () => {
+    battlePairFn
+      .mockResolvedValueOnce({
+        idolA: {
+          id: "idol-a1",
+          name: "アイドルA1",
+          group: "グループA1",
+          photo: { id: "photo-a1", imageUrl: "https://example.com/a1.jpg" },
+        },
+        idolB: {
+          id: "idol-b1",
+          name: "アイドルB1",
+          group: "グループB1",
+          photo: { id: "photo-b1", imageUrl: "https://example.com/b1.jpg" },
+        },
+      })
+      .mockResolvedValueOnce({
+        idolA: {
+          id: "idol-a2",
+          name: "アイドルA2",
+          group: "グループA2",
+          photo: { id: "photo-a2", imageUrl: "https://example.com/a2.jpg" },
+        },
+        idolB: {
+          id: "idol-b2",
+          name: "アイドルB2",
+          group: "グループB2",
+          photo: { id: "photo-b2", imageUrl: "https://example.com/b2.jpg" },
+        },
+      });
+    submitVoteFn.mockResolvedValue({ success: true });
+
+    const user = userEvent.setup();
+    renderWithProviders(<BattleComponent />);
+
+    // 1 戦目のペアが表示される
+    const panelA1 = (await screen.findByText("アイドルA1")).closest("button");
+    expect(screen.getByText(/ROUND 01\/10/)).toBeInTheDocument();
+    await user.click(panelA1!);
+
+    // 投票が送信される
+    await waitFor(() => {
+      expect(submitVoteFn).toHaveBeenCalledTimes(1);
+    });
+
+    // ユーザーが何も操作していないのに、自動で 2 戦目のペアが描画される
+    expect(await screen.findByText("アイドルA2")).toBeInTheDocument();
+    expect(screen.getByText("アイドルB2")).toBeInTheDocument();
+
+    // ROUND 表示も 02 に進んでいる
+    expect(screen.getByText(/ROUND 02\/10/)).toBeInTheDocument();
+
+    // battlePair が 2 回 fetch されている (= 自動で次バトルを取得した)
+    expect(battlePairFn).toHaveBeenCalledTimes(2);
+
+    // ランキング画面への遷移は発生していない（まだ 10 票に達していないため）
+    expect(mockNavigate).not.toHaveBeenCalled();
+
+    // 次戦のパネルも有効で、追加投票が可能（=自動遷移後も idle 状態に戻っている）
+    const panelA2 = screen.getByText("アイドルA2").closest("button");
+    expect(panelA2).not.toBeDisabled();
+  });
+
   test("投票がネットワークエラーになっても画面が壊れず再投票できる", async () => {
     battlePairFn.mockResolvedValue({
       idolA: {
