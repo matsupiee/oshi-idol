@@ -1,5 +1,4 @@
 import { TRPCError } from "@trpc/server";
-import { createDb } from "@oshi-idol/db";
 import { idols, votes } from "@oshi-idol/db/schema/idols";
 import { eq } from "drizzle-orm";
 import { z } from "zod";
@@ -18,8 +17,8 @@ export const votesRouter = router({
         sessionId: z.string(),
       }),
     )
-    .mutation(async ({ input }) => {
-      const db = createDb();
+    .mutation(async ({ input, ctx }) => {
+      const { db } = ctx;
 
       const winner = await db.query.idols.findFirst({
         where: eq(idols.id, input.winnerId),
@@ -40,25 +39,24 @@ export const votesRouter = router({
         loser.eloRating,
       );
 
-      await db.transaction(async (tx) => {
-        await tx.insert(votes).values({
+      // D1 は BEGIN をサポートしないため batch() で原子的に更新する
+      await db.batch([
+        db.insert(votes).values({
           winnerId: input.winnerId,
           loserId: input.loserId,
           winnerPhotoId: input.winnerPhotoId,
           loserPhotoId: input.loserPhotoId,
           sessionId: input.sessionId,
-        });
-
-        await tx
+        }),
+        db
           .update(idols)
           .set({ eloRating: newWinnerRating, wins: winner.wins + 1 })
-          .where(eq(idols.id, input.winnerId));
-
-        await tx
+          .where(eq(idols.id, input.winnerId)),
+        db
           .update(idols)
           .set({ eloRating: newLoserRating, losses: loser.losses + 1 })
-          .where(eq(idols.id, input.loserId));
-      });
+          .where(eq(idols.id, input.loserId)),
+      ]);
 
       return { success: true };
     }),
