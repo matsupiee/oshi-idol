@@ -15,6 +15,13 @@
       "when": 1779200977276,
       "tag": "0001_bizarre_jigsaw",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1779296104989,
+      "tag": "0002_yummy_maelstrom",
+      "breakpoints": true
     }
   ]
 }
