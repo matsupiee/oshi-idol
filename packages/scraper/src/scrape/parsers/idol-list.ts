@@ -12,7 +12,7 @@ export function parseIdolList(html: string): IdolListItem[] {
 
   $("a[href]").each((_, el) => {
     const href = $(el).attr("href") ?? "";
-    const match = href.match(/\/idol\/([a-z0-9]+)$/);
+    const match = href.match(/\/idol\/([a-z0-9-]+)$/);
     if (match?.[1] && !seen.has(match[1])) {
       seen.add(match[1]);
       items.push({

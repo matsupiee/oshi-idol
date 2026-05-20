@@ -1,5 +1,5 @@
 import dotenv from "dotenv";
-import { and, eq } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/sqlite-proxy";
 
 import { idolPhotos, idols } from "@oshi-idol/db/schema/idols";
@@ -9,6 +9,7 @@ import { getJson, listKeys } from "../r2";
 dotenv.config();
 
 interface ProfileJson {
+  naviIdolId: string;
   name: string;
   group: string;
   images: Array<{ key: string; originalUrl: string }>;
@@ -57,25 +58,18 @@ const db = drizzle(async (sql, params, method) => {
 });
 
 async function importIdol(profile: ProfileJson): Promise<void> {
-  const existing = await db
-    .select({ id: idols.id })
-    .from(idols)
-    .where(and(eq(idols.name, profile.name), eq(idols.group, profile.group)))
-    .limit(1);
+  const [upserted] = await db
+    .insert(idols)
+    .values({ naviIdolId: profile.naviIdolId, name: profile.name, group: profile.group })
+    .onConflictDoUpdate({
+      target: idols.naviIdolId,
+      set: { name: profile.name, group: profile.group },
+    })
+    .returning({ id: idols.id });
 
-  let idolId: string;
+  const idolId = upserted!.id;
 
-  if (existing.length > 0) {
-    idolId = existing[0]!.id;
-    // assumes no votes exist yet; re-running after voting activity would violate votes→idol_photos FK
-    await db.delete(idolPhotos).where(eq(idolPhotos.idolId, idolId));
-  } else {
-    const inserted = await db
-      .insert(idols)
-      .values({ name: profile.name, group: profile.group })
-      .returning({ id: idols.id });
-    idolId = inserted[0]!.id;
-  }
+  await db.delete(idolPhotos).where(eq(idolPhotos.idolId, idolId));
 
   if (profile.images.length > 0) {
     await db.insert(idolPhotos).values(
