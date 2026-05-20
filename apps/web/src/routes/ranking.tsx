@@ -21,7 +21,7 @@ function getTier(elo: number) {
   return TIER_CONFIG.find((t) => elo >= t.minElo) ?? TIER_CONFIG[TIER_CONFIG.length - 1];
 }
 
-function RankingComponent() {
+export function RankingComponent() {
   const navigate = useNavigate();
   const trpc = useTRPC();
   const posterRef = useRef<HTMLDivElement>(null);
