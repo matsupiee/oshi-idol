@@ -27,6 +27,7 @@ function BattleComponent() {
   const [phase, setPhase] = useState<"idle" | "locked" | "exit">("idle");
   const [bursts, setBursts] = useState<Burst[]>([]);
   const burstIdRef = useRef(0);
+  const exitTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const sessionId = getSessionId();
 
   const battlePair = useQuery(trpc.idols.battlePair.queryOptions({ sessionId }));
@@ -52,7 +53,7 @@ function BattleComponent() {
       setPhase("locked");
       setVoting(winnerId);
 
-      setTimeout(() => setPhase("exit"), 380);
+      exitTimerRef.current = setTimeout(() => setPhase("exit"), 380);
 
       try {
         await submitVote.mutateAsync({
@@ -77,6 +78,10 @@ function BattleComponent() {
       } catch {
         // ネットワークエラー時は idle に戻す
       } finally {
+        if (exitTimerRef.current !== null) {
+          clearTimeout(exitTimerRef.current);
+          exitTimerRef.current = null;
+        }
         setVoting(null);
         setWinnerIdx(null);
         setPhase("idle");
