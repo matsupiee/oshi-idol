@@ -212,4 +212,31 @@ describe("BattleComponent (投票画面)", () => {
     expect(screen.getByText(/ROUND 01\/10/)).toBeInTheDocument();
     expect(mockNavigate).not.toHaveBeenCalled();
   });
+
+  test("各パネルの画像は object-position: center 25% で表示される", async () => {
+    battlePairFn.mockResolvedValue({
+      idolA: {
+        id: "idol-a",
+        name: "アイドルA",
+        group: "グループA",
+        photo: { id: "photo-a", imageUrl: "https://example.com/a.jpg" },
+      },
+      idolB: {
+        id: "idol-b",
+        name: "アイドルB",
+        group: "グループB",
+        photo: { id: "photo-b", imageUrl: "https://example.com/b.jpg" },
+      },
+    });
+
+    renderWithProviders(<BattleComponent />);
+
+    await screen.findByText("アイドルA");
+
+    const images = document.querySelectorAll("img");
+    expect(images).toHaveLength(2);
+    for (const img of images) {
+      expect(img.style.objectPosition).toBe("center 25%");
+    }
+  });
 });
