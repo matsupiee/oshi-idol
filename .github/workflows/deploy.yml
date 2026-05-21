@@ -22,6 +22,7 @@ jobs:
       CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
       ALCHEMY_PASSWORD: ${{ secrets.ALCHEMY_PASSWORD }}
       ALCHEMY_STATE_TOKEN: ${{ secrets.ALCHEMY_STATE_TOKEN }}
+      STAGE: hiromu
       BETTER_AUTH_SECRET: ${{ secrets.BETTER_AUTH_SECRET }}
       BETTER_AUTH_URL: ${{ vars.BETTER_AUTH_URL }}
       CORS_ORIGIN: ${{ vars.CORS_ORIGIN }}
