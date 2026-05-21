@@ -108,7 +108,7 @@
 
 ## 3. Ranking Screen
 
-- TOP10
+- 全体ランキング TOP10
 - Tier list
 - share button
 
