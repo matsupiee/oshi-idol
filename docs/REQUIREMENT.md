@@ -63,6 +63,10 @@
 - current ranking
 - total votes
 
+vote history はブラウザの `localStorage` に保存する個人向け履歴。
+成功した投票だけを対象に、勝者・敗者の `id` / `name` / `group` / 表示写真ID / 投票時刻を保存する。
+投票画面では直近の投票結果を表示し、通信失敗時は履歴を増やさない。
+
 ---
 
 ## 4. アイドルデータ

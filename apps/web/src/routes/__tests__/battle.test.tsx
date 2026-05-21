@@ -63,6 +63,7 @@ describe("BattleComponent (投票画面)", () => {
     mockNavigate.mockReset();
     battlePairFn.mockReset();
     submitVoteFn.mockReset();
+    window.localStorage.clear();
   });
 
   test("データ取得中は LOADING... を表示する", () => {
@@ -163,7 +164,11 @@ describe("BattleComponent (投票画面)", () => {
     renderWithProviders(<BattleComponent />);
 
     for (let i = 0; i < 10; i++) {
-      const panelA = (await screen.findByText("アイドルA")).closest("button");
+      await waitFor(() => expect(screen.getAllByText("アイドルA").length).toBeGreaterThan(0));
+      const panelA = screen
+        .getAllByRole("button")
+        .find((button) => within(button).queryByText("アイドルA"));
+      expect(panelA).toBeDefined();
       // パネルが disabled の場合は次フレームを待つ
       await waitFor(() => expect(panelA).not.toBeDisabled());
       await user.click(panelA!);
@@ -238,5 +243,42 @@ describe("BattleComponent (投票画面)", () => {
     for (const img of images) {
       expect(img.style.objectPosition).toBe("center 25%");
     }
+  });
+
+  test("成功した投票を localStorage に保存し、過去の投票結果として表示する", async () => {
+    battlePairFn.mockResolvedValue({
+      idolA: {
+        id: "idol-a",
+        name: "アイドルA",
+        group: "グループA",
+        photo: { id: "photo-a", imageUrl: "https://example.com/a.jpg" },
+      },
+      idolB: {
+        id: "idol-b",
+        name: "アイドルB",
+        group: "グループB",
+        photo: { id: "photo-b", imageUrl: "https://example.com/b.jpg" },
+      },
+    });
+    submitVoteFn.mockResolvedValue({ success: true });
+
+    const user = userEvent.setup();
+    renderWithProviders(<BattleComponent />);
+
+    const panelA = (await screen.findByText("アイドルA")).closest("button");
+    await user.click(panelA!);
+
+    await waitFor(() => {
+      expect(screen.getByText("投票履歴")).toBeInTheDocument();
+    });
+    const history = screen.getByRole("region", { name: "過去の投票結果" });
+    expect(within(history).getByText("アイドルA")).toBeInTheDocument();
+    expect(within(history).getByText("アイドルB に勝利")).toBeInTheDocument();
+    expect(JSON.parse(window.localStorage.getItem("oshi-vote-history") ?? "[]")).toMatchObject([
+      {
+        winner: { id: "idol-a", name: "アイドルA", group: "グループA", photoId: "photo-a" },
+        loser: { id: "idol-b", name: "アイドルB", group: "グループB", photoId: "photo-b" },
+      },
+    ]);
   });
 });

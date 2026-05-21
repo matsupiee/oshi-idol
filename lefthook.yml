@@ -16,6 +16,6 @@ pre-push:
   parallel: true
   jobs:
     - name: test
-      run: find . \( -name "*.test.ts" -o -name "*.test.tsx" -o -name "*.spec.ts" -o -name "*.spec.tsx" \) -not -path "*/node_modules/*" | grep -q . && bun test || echo "No test files found, skipping"
+      run: bun run test
     - name: check-types
       run: bun run check-types
