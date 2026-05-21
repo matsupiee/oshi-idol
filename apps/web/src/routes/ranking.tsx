@@ -4,6 +4,7 @@ import { toPng } from "html-to-image";
 import { useRef } from "react";
 
 import { useTRPC } from "@/utils/trpc";
+import { ArrowLeft } from "lucide-react";
 
 export const Route = createFileRoute("/ranking")({
   component: RankingComponent,
@@ -90,17 +91,21 @@ export function RankingComponent() {
     >
       {/* Hero header */}
       <div
-        className="relative px-6 pb-8 pt-16"
+        className="relative px-6 pb-8 pt-6"
         style={{
           background:
             "radial-gradient(ellipse at 50% 0%, #ff2e8833 0%, transparent 60%), linear-gradient(180deg, #1a0830 0%, #0a0418 100%)",
           borderBottom: "1px solid #9d4dff44",
         }}
       >
-        <div className="mb-4 flex items-center justify-between">
-          <span className="arcade-chip">OVERALL</span>
-          <span className="arcade-chip">{top10.length} IDOLS</span>
-        </div>
+        <button
+          type="button"
+          onClick={() => navigate({ to: "/" })}
+          className="mb-7 inline-flex items-center gap-2 arcade-chip"
+        >
+          <ArrowLeft aria-hidden="true" size={13} />
+          BACK
+        </button>
         <div
           style={{
             fontFamily: '"Bungee", monospace',
@@ -109,9 +114,7 @@ export function RankingComponent() {
             textShadow: "0 0 16px #9d4dff, 4px 4px 0 #ff2e88",
           }}
         >
-          OVERALL
-          <br />
-          OSHI RANK
+          GLOBAL RANK
         </div>
         <p
           className="mt-2"
