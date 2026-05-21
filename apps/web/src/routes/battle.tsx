@@ -44,9 +44,8 @@ export function BattleComponent() {
     ) => {
       if (phase !== "idle" || voting) return;
 
-      const rect = e.currentTarget.getBoundingClientRect();
-      const x = ((e.clientX - rect.left) / rect.width) * 100;
-      const y = ((e.clientY - rect.top) / rect.height) * 100;
+      const x = (e.clientX / window.innerWidth) * 100;
+      const y = (e.clientY / window.innerHeight) * 100;
       const id = ++burstIdRef.current;
       setBursts((b) => [...b, { id, x, y }]);
       setWinnerIdx(idx);
