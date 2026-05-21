@@ -74,7 +74,7 @@ export function RankingComponent() {
 
   function handleShareX() {
     const text =
-      "私の推し活ランキング！\n" +
+      "全体推しランキング TOP5\n" +
       top10
         .slice(0, 5)
         .map((idol) => `${idol.rank}位: ${idol.name} (${idol.group})`)
@@ -98,7 +98,7 @@ export function RankingComponent() {
         }}
       >
         <div className="mb-4 flex items-center justify-between">
-          <span className="arcade-chip">RESULT</span>
+          <span className="arcade-chip">OVERALL</span>
           <span className="arcade-chip">{top10.length} IDOLS</span>
         </div>
         <div
@@ -109,7 +109,7 @@ export function RankingComponent() {
             textShadow: "0 0 16px #9d4dff, 4px 4px 0 #ff2e88",
           }}
         >
-          YOUR
+          OVERALL
           <br />
           OSHI RANK
         </div>
@@ -121,7 +121,7 @@ export function RankingComponent() {
             color: "rgba(255,255,255,0.6)",
           }}
         >
-          君の推し度ランキング
+          みんなの投票で決まる全体ランキング
         </p>
       </div>
 
@@ -595,7 +595,7 @@ function SharePoster({
             color: "#ff2e88",
           }}
         >
-          MY TOP 10 · OSHI BATTLE
+          OVERALL TOP 10 · OSHI BATTLE
         </div>
         <div
           className="mt-1"
@@ -607,7 +607,7 @@ function SharePoster({
             textShadow: "0 0 8px #ff2e88, 2px 2px 0 #9d4dff",
           }}
         >
-          君の推しランキング
+          全体推しランキング
         </div>
       </div>
 

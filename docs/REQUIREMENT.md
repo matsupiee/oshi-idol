@@ -112,7 +112,7 @@ vote history はブラウザの `localStorage` に保存する個人向け履歴
 
 ## 3. Ranking Screen
 
-- TOP10
+- 全体ランキング TOP10
 - Tier list
 - share button
 

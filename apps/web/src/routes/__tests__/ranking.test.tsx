@@ -97,6 +97,34 @@ describe("RankingComponent (結果画面)", () => {
     expect(screen.getByText("TOP 10")).toBeInTheDocument();
   });
 
+  test("全体ランキングとして見える見出しとポスター文言を表示する", async () => {
+    top10Fn.mockResolvedValue([
+      {
+        id: "1",
+        rank: 1,
+        name: "推し一",
+        group: "G1",
+        eloRating: 1800,
+        wins: 5,
+        losses: 5,
+        winRate: 0.5,
+        photo: null,
+      },
+    ]);
+
+    renderWithProviders(<RankingComponent />);
+
+    expect(await screen.findByText("OVERALL")).toBeInTheDocument();
+    expect(
+      screen.getByText((_, element) => element?.textContent === "OVERALLOSHI RANK"),
+    ).toBeInTheDocument();
+    expect(screen.getByText("みんなの投票で決まる全体ランキング")).toBeInTheDocument();
+    expect(screen.getByText("OVERALL TOP 10 · OSHI BATTLE")).toBeInTheDocument();
+    expect(screen.getByText("全体推しランキング")).toBeInTheDocument();
+    expect(screen.queryByText("君の推し度ランキング")).not.toBeInTheDocument();
+    expect(screen.queryByText("君の推しランキング")).not.toBeInTheDocument();
+  });
+
   test("ELO に応じてティアが分類される (S: 1700+, A: 1600+, ...)", async () => {
     const idols: RankIdol[] = [
       // S ティア (1700+)
@@ -299,6 +327,7 @@ describe("RankingComponent (結果画面)", () => {
     const [url, target] = openSpy.mock.calls[0]!;
     expect(target).toBe("_blank");
     expect(String(url)).toMatch(/^https:\/\/twitter\.com\/intent\/tweet\?/);
+    expect(decodeURIComponent(String(url))).toContain("全体推しランキング TOP5");
     expect(decodeURIComponent(String(url))).toContain("1位: 推し一");
     expect(decodeURIComponent(String(url))).toContain("2位: 推し二");
 
