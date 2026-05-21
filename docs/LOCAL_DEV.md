@@ -42,6 +42,8 @@ bun run dev
 - DB ファイルは `.alchemy/miniflare/v3/d1/` 配下に SQLite として保存されます
 - `bun run dev` を停止してもデータは消えず残り続けます
 - ローカルの DB 名は `oshi-idol-db-local`、本番は `oshi-idol-db`（`alchemy dev` / `alchemy deploy` で自動的に切り替わる）
+- `packages/infra` の `alchemy dev` はローカルファイル状態ストアを使うため、CloudflareStateStore 用の `ALCHEMY_STATE_TOKEN` は不要です
+- `.env` が未作成でも `alchemy dev` は `http://localhost:3001` とローカル用の Better Auth secret を既定値として使います。本番 deploy では `CORS_ORIGIN` / `BETTER_AUTH_SECRET` / `BETTER_AUTH_URL` を必ず設定してください
 - `bun run db:push` は Cloudflare のリモート D1 API に接続するため、ローカル開発には使えません
 
 ## スキーマ変更時

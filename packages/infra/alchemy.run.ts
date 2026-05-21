@@ -1,7 +1,7 @@
 import path from "node:path";
 import alchemy from "alchemy";
 import { D1Database, R2Bucket, TanStackStart } from "alchemy/cloudflare";
-import { CloudflareStateStore } from "alchemy/state";
+import { CloudflareStateStore, FileSystemStateStore } from "alchemy/state";
 import { config } from "dotenv";
 
 config({ path: "./.env" });
@@ -10,9 +10,13 @@ config({ path: "../../apps/web/.env" });
 const infraDir = import.meta.dirname;
 const migrationsDir = path.resolve(infraDir, "../../packages/db/src/migrations");
 const localWranglerDir = path.resolve(infraDir, "../../apps/web/.alchemy/local");
+const isLocalDev = process.argv.includes("--dev");
+const localDevUrl = "http://localhost:3001";
+const localBetterAuthSecret = "local-dev-better-auth-secret-for-oshi-idol";
 
 const app = await alchemy("oshi-idol", {
-  stateStore: (scope) => new CloudflareStateStore(scope),
+  stateStore: (scope) =>
+    isLocalDev ? new FileSystemStateStore(scope) : new CloudflareStateStore(scope),
   adopt: true,
 });
 
@@ -31,9 +35,13 @@ export const web = await TanStackStart("web", {
   bindings: {
     DB: db,
     BUCKET: assets,
-    CORS_ORIGIN: alchemy.env.CORS_ORIGIN!,
-    BETTER_AUTH_SECRET: alchemy.secret.env.BETTER_AUTH_SECRET!,
-    BETTER_AUTH_URL: alchemy.env.BETTER_AUTH_URL!,
+    CORS_ORIGIN: isLocalDev ? (process.env.CORS_ORIGIN ?? localDevUrl) : alchemy.env.CORS_ORIGIN!,
+    BETTER_AUTH_SECRET: isLocalDev
+      ? (process.env.BETTER_AUTH_SECRET ?? localBetterAuthSecret)
+      : alchemy.secret.env.BETTER_AUTH_SECRET!,
+    BETTER_AUTH_URL: isLocalDev
+      ? (process.env.BETTER_AUTH_URL ?? localDevUrl)
+      : alchemy.env.BETTER_AUTH_URL!,
   },
   wrangler: {
     transform: (spec) => {

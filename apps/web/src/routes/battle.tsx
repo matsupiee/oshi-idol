@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { getSessionId } from "@/lib/session";
+import { addVoteHistoryEntry, getVoteHistory, type VoteHistoryEntry } from "@/lib/vote-history";
 import { useTRPC } from "@/utils/trpc";
 
 export const Route = createFileRoute("/battle")({
@@ -26,6 +27,7 @@ export function BattleComponent() {
   const [winnerIdx, setWinnerIdx] = useState<0 | 1 | null>(null);
   const [phase, setPhase] = useState<"idle" | "locked" | "exit">("idle");
   const [bursts, setBursts] = useState<Burst[]>([]);
+  const [voteHistory, setVoteHistory] = useState<VoteHistoryEntry[]>(() => getVoteHistory());
   const burstIdRef = useRef(0);
   const exitTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const sessionId = getSessionId();
@@ -37,31 +39,47 @@ export function BattleComponent() {
     async (
       e: React.MouseEvent<HTMLButtonElement>,
       idx: 0 | 1,
-      winnerId: string,
-      loserId: string,
-      winnerPhotoId: string | null,
-      loserPhotoId: string | null,
+      winner: IdolData,
+      loser: IdolData,
     ) => {
       if (phase !== "idle" || voting) return;
 
+      const winnerPhotoId = winner.photo?.id ?? null;
+      const loserPhotoId = loser.photo?.id ?? null;
       const x = (e.clientX / window.innerWidth) * 100;
       const y = (e.clientY / window.innerHeight) * 100;
       const id = ++burstIdRef.current;
       setBursts((b) => [...b, { id, x, y }]);
       setWinnerIdx(idx);
       setPhase("locked");
-      setVoting(winnerId);
+      setVoting(winner.id);
 
       exitTimerRef.current = setTimeout(() => setPhase("exit"), 380);
 
       try {
         await submitVote.mutateAsync({
-          winnerId,
-          loserId,
+          winnerId: winner.id,
+          loserId: loser.id,
           winnerPhotoId: winnerPhotoId ?? "",
           loserPhotoId: loserPhotoId ?? "",
           sessionId,
         });
+        setVoteHistory(
+          addVoteHistoryEntry({
+            winner: {
+              id: winner.id,
+              name: winner.name,
+              group: winner.group,
+              photoId: winnerPhotoId,
+            },
+            loser: {
+              id: loser.id,
+              name: loser.name,
+              group: loser.group,
+              photoId: loserPhotoId,
+            },
+          }),
+        );
 
         const newCount = voteCount + 1;
         setVoteCount(newCount);
@@ -152,9 +170,7 @@ export function BattleComponent() {
         idol={idolA}
         position="top"
         state={phase === "idle" ? "idle" : winnerIdx === 0 ? "win" : "lose"}
-        onTap={(e) =>
-          handleTap(e, 0, idolA.id, idolB.id, idolA.photo?.id ?? null, idolB.photo?.id ?? null)
-        }
+        onTap={(e) => handleTap(e, 0, idolA, idolB)}
         disabled={phase !== "idle"}
       />
 
@@ -163,9 +179,7 @@ export function BattleComponent() {
         idol={idolB}
         position="bottom"
         state={phase === "idle" ? "idle" : winnerIdx === 1 ? "win" : "lose"}
-        onTap={(e) =>
-          handleTap(e, 1, idolB.id, idolA.id, idolB.photo?.id ?? null, idolA.photo?.id ?? null)
-        }
+        onTap={(e) => handleTap(e, 1, idolB, idolA)}
         disabled={phase !== "idle"}
       />
 
@@ -216,6 +230,8 @@ export function BattleComponent() {
       {/* CRT scanlines */}
       <div className="arcade-scanlines" />
 
+      <VoteHistoryPanel history={voteHistory} />
+
       {/* HUD bottom */}
       <div
         className="absolute bottom-6 left-0 right-0 z-30 text-center"
@@ -229,6 +245,81 @@ export function BattleComponent() {
         TAP TO VOTE · 推しを選べ
       </div>
     </div>
+  );
+}
+
+function VoteHistoryPanel({ history }: { history: VoteHistoryEntry[] }) {
+  const recentHistory = history.slice(0, 3);
+
+  if (recentHistory.length === 0) return null;
+
+  return (
+    <section
+      aria-label="過去の投票結果"
+      className="absolute bottom-14 left-4 z-30 w-[min(320px,calc(100%-2rem))]"
+      style={{
+        border: "1px solid rgba(255,255,255,0.18)",
+        background: "rgba(10,4,24,0.72)",
+        boxShadow: "0 0 18px rgba(255,46,136,0.26)",
+        backdropFilter: "blur(10px)",
+        padding: 10,
+      }}
+    >
+      <h2
+        style={{
+          fontFamily: '"JetBrains Mono", monospace',
+          fontSize: 10,
+          letterSpacing: "0.12em",
+          color: "#ff2e88",
+          marginBottom: 8,
+        }}
+      >
+        投票履歴
+      </h2>
+      <ol className="space-y-2">
+        {recentHistory.map((entry) => (
+          <li
+            key={`${entry.votedAt}-${entry.winner.id}-${entry.loser.id}`}
+            className="grid grid-cols-[1fr_auto] gap-2"
+          >
+            <div className="min-w-0">
+              <div
+                className="truncate"
+                style={{
+                  fontFamily: '"Noto Sans JP", sans-serif',
+                  fontSize: 13,
+                  fontWeight: 700,
+                  color: "#fff",
+                }}
+              >
+                {entry.winner.name}
+              </div>
+              <div
+                className="truncate"
+                style={{
+                  fontFamily: '"Noto Sans JP", sans-serif',
+                  fontSize: 11,
+                  color: "rgba(255,255,255,0.64)",
+                }}
+              >
+                {entry.loser.name} に勝利
+              </div>
+            </div>
+            <span
+              className="truncate"
+              style={{
+                fontFamily: '"JetBrains Mono", monospace',
+                fontSize: 10,
+                color: "rgba(255,255,255,0.48)",
+                alignSelf: "center",
+              }}
+            >
+              {entry.winner.group}
+            </span>
+          </li>
+        ))}
+      </ol>
+    </section>
   );
 }
 
