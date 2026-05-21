@@ -12,7 +12,7 @@ const migrationsDir = path.resolve(infraDir, "../../packages/db/src/migrations")
 const localWranglerDir = path.resolve(infraDir, "../../apps/web/.alchemy/local");
 
 const app = await alchemy("oshi-idol", {
-  stateStore: (scope) => new CloudflareStateStore(scope),
+  stateStore: process.env.CI ? (scope) => new CloudflareStateStore(scope) : undefined,
 });
 
 const db = await D1Database("database", {
