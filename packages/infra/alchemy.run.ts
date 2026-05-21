@@ -17,6 +17,7 @@ const app = await alchemy("oshi-idol", {
 
 const db = await D1Database("database", {
   name: app.local ? "oshi-idol-db-local" : "oshi-idol-db",
+  // この設定により、Alchemy が Cloudflare API を通じて D1 に対してマイグレーションを自動適用する
   migrationsDir: "../../packages/db/src/migrations",
 });
 
