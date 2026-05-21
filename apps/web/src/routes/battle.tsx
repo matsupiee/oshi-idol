@@ -119,8 +119,6 @@ export function BattleComponent() {
   }
 
   const { idolA, idolB } = battlePair.data;
-  const clipA = "polygon(0 0, 100% 0, 100% 38%, 0 62%)";
-  const clipB = "polygon(0 62%, 100% 38%, 100% 100%, 0 100%)";
 
   return (
     <div className="absolute inset-0 overflow-hidden bg-[#0a0418] text-white">
@@ -153,7 +151,6 @@ export function BattleComponent() {
       {/* Panel A (top-left diagonal) */}
       <BattlePanel
         idol={idolA}
-        clip={clipA}
         position="top"
         state={phase === "idle" ? "idle" : winnerIdx === 0 ? "win" : "lose"}
         onTap={(e) =>
@@ -165,7 +162,6 @@ export function BattleComponent() {
       {/* Panel B (bottom-right diagonal) */}
       <BattlePanel
         idol={idolB}
-        clip={clipB}
         position="bottom"
         state={phase === "idle" ? "idle" : winnerIdx === 1 ? "win" : "lose"}
         onTap={(e) =>
@@ -248,32 +244,46 @@ interface IdolData {
 
 interface BattlePanelProps {
   idol: IdolData;
-  clip: string;
   position: "top" | "bottom";
   state: "idle" | "win" | "lose";
   onTap: (e: React.MouseEvent<HTMLButtonElement>) => void;
   disabled: boolean;
 }
 
-function BattlePanel({ idol, clip, position, state, onTap, disabled }: BattlePanelProps) {
+function BattlePanel({ idol, position, state, onTap, disabled }: BattlePanelProps) {
   const animClass =
     state === "win" ? "animate-panel-win" : state === "lose" ? "animate-panel-lose" : "";
+
+  const clipPath =
+    position === "top"
+      ? "polygon(0 0, 100% 0, 100% 63%, 0 100%)"
+      : "polygon(0 37%, 100% 0, 100% 100%, 0 100%)";
+
+  const positionClass =
+    position === "top"
+      ? "absolute top-0 left-0 right-0 h-[60%]"
+      : "absolute bottom-0 left-0 right-0 h-[60%]";
 
   return (
     <button
       type="button"
       onClick={onTap}
       disabled={disabled}
-      className={`absolute inset-0 cursor-pointer overflow-hidden border-none bg-transparent p-0 ${animClass}`}
+      className={`${positionClass} cursor-pointer overflow-hidden border-none bg-transparent p-0 ${animClass}`}
       style={{
-        clipPath: clip,
+        clipPath,
         transformOrigin: position === "top" ? "50% 30%" : "50% 70%",
       }}
     >
       {/* Portrait */}
       <div className="absolute inset-0">
         {idol.photo?.imageUrl ? (
-          <img src={idol.photo.imageUrl} alt={idol.name} className="h-full w-full object-cover" />
+          <img
+            src={idol.photo.imageUrl}
+            alt={idol.name}
+            className="h-full w-full object-cover"
+            style={{ objectPosition: "center 25%" }}
+          />
         ) : (
           <div
             className="flex h-full w-full items-center justify-center"
@@ -311,7 +321,7 @@ function BattlePanel({ idol, clip, position, state, onTap, disabled }: BattlePan
       {/* Nameplate */}
       <div
         className="pointer-events-none absolute left-6 right-6"
-        style={position === "top" ? { top: 110 } : { bottom: 90 }}
+        style={position === "top" ? { top: 90 } : { bottom: 60 }}
       >
         <div
           style={{
