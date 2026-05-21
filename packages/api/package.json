@@ -9,7 +9,9 @@
       "default": "./src/*.ts"
     }
   },
-  "scripts": {},
+  "scripts": {
+    "test": "vitest run"
+  },
   "dependencies": {
     "@oshi-idol/auth": "workspace:*",
     "@oshi-idol/db": "workspace:*",
@@ -22,6 +24,7 @@
   },
   "devDependencies": {
     "@oshi-idol/config": "workspace:*",
-    "typescript": "catalog:"
+    "typescript": "catalog:",
+    "vitest": "^4.1.6"
   }
 }

@@ -86,6 +86,7 @@
       "devDependencies": {
         "@oshi-idol/config": "workspace:*",
         "typescript": "catalog:",
+        "vitest": "^4.1.6",
       },
     },
     "packages/auth": {
