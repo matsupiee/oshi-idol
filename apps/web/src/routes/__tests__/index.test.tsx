@@ -38,4 +38,18 @@ describe("HomeComponent (トップ画面)", () => {
 
     expect(mockNavigate).toHaveBeenCalledWith({ to: "/battle" });
   });
+
+  test("全ユーザーランキングと自分の投票履歴への導線がある", async () => {
+    const user = userEvent.setup();
+    renderWithProviders(<HomeComponent />);
+
+    expect(screen.getByRole("button", { name: /GLOBAL RANK.*全体ランキング/ })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /MY HISTORY.*投票履歴/ })).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: /GLOBAL RANK/ }));
+    expect(mockNavigate).toHaveBeenCalledWith({ to: "/ranking" });
+
+    await user.click(screen.getByRole("button", { name: /MY HISTORY/ }));
+    expect(mockNavigate).toHaveBeenCalledWith({ to: "/history" });
+  });
 });

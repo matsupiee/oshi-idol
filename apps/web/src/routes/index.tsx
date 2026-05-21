@@ -1,4 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { History, Trophy } from "lucide-react";
+import type { ReactNode } from "react";
 import { useState } from "react";
 
 export const Route = createFileRoute("/")({
@@ -102,7 +104,7 @@ export function HomeComponent() {
       <div className="flex-1" />
 
       {/* CTA */}
-      <div className="relative z-10 px-7 pb-12">
+      <div className="relative z-10 px-7 pb-8">
         <button
           type="button"
           onPointerDown={() => setPressing(true)}
@@ -131,6 +133,22 @@ export function HomeComponent() {
         >
           ▶ PRESS START
         </button>
+        <div className="mt-3 grid grid-cols-2 gap-2.5">
+          <HomeNavButton
+            color="#fff200"
+            icon={<Trophy aria-hidden="true" size={16} />}
+            label="GLOBAL RANK"
+            sub="全体ランキング"
+            onClick={() => navigate({ to: "/ranking" })}
+          />
+          <HomeNavButton
+            color="#ff2e88"
+            icon={<History aria-hidden="true" size={16} />}
+            label="MY HISTORY"
+            sub="投票履歴"
+            onClick={() => navigate({ to: "/history" })}
+          />
+        </div>
         <div
           className="mt-4 flex justify-between"
           style={{
@@ -148,5 +166,68 @@ export function HomeComponent() {
       {/* CRT scanlines */}
       <div className="arcade-scanlines" />
     </div>
+  );
+}
+
+function HomeNavButton({
+  color,
+  icon,
+  label,
+  sub,
+  onClick,
+}: {
+  color: string;
+  icon: ReactNode;
+  label: string;
+  sub: string;
+  onClick: () => void;
+}) {
+  const [pressed, setPressed] = useState(false);
+
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      onPointerDown={() => setPressed(true)}
+      onPointerUp={() => setPressed(false)}
+      onPointerLeave={() => setPressed(false)}
+      className="flex h-[60px] flex-col items-start justify-center gap-0.5 px-2.5 text-left"
+      style={{
+        background: "rgba(10,4,24,0.62)",
+        color,
+        border: `1.5px solid ${color}`,
+        borderRadius: 4,
+        cursor: "pointer",
+        boxShadow: pressed
+          ? `inset 0 2px 8px rgba(0,0,0,0.55), 0 0 0 1px ${color}66`
+          : `0 0 14px ${color}55, inset 0 0 12px ${color}22, 0 3px 0 #000`,
+        transform: pressed ? "translateY(3px)" : "translateY(0)",
+        transition: "transform 80ms, box-shadow 80ms",
+      }}
+    >
+      <span className="flex items-center gap-1.5">
+        {icon}
+        <span
+          style={{
+            fontFamily: '"Bungee", monospace',
+            fontSize: 12,
+            letterSpacing: "0.08em",
+            textShadow: `0 0 8px ${color}aa`,
+          }}
+        >
+          {label}
+        </span>
+      </span>
+      <span
+        style={{
+          fontFamily: '"Noto Sans JP", sans-serif',
+          fontSize: 10,
+          color: "rgba(255,255,255,0.58)",
+          letterSpacing: "0.06em",
+        }}
+      >
+        {sub}
+      </span>
+    </button>
   );
 }

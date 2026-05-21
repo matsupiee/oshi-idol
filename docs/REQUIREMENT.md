@@ -103,6 +103,8 @@ vote history はブラウザの `localStorage` に保存する個人向け履歴
 ## 1. Home
 
 - Start button
+- 全ユーザーランキング(`/ranking`)への導線
+- 自分の過去の投票履歴(`/history`)への導線
 
 ## 2. Battle Screen
 
@@ -115,6 +117,12 @@ vote history はブラウザの `localStorage` に保存する個人向け履歴
 - 全体ランキング TOP10
 - Tier list
 - share button
+
+## 4. History Screen
+
+- localStorage に保存された vote history を新しい順で表示
+- 履歴がない場合は空状態と Battle 開始導線を表示
+- 匿名ユーザー向けの個人履歴であり、全体ランキングとは分離する
 
 ---
 
