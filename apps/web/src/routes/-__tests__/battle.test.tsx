@@ -32,15 +32,25 @@ interface BattlePair {
 const battlePairFn = vi.fn<() => Promise<BattlePair>>();
 const submitVoteFn = vi.fn<(input: unknown) => Promise<{ success: true }>>();
 
+interface BattlePairInput {
+  sessionId: string;
+  excludeIdolIds?: string[];
+}
+
+const battlePairCalls: BattlePairInput[] = [];
+
 vi.mock("@/utils/trpc", () => {
   return {
     useTRPC: () => ({
       idols: {
         battlePair: {
-          queryKey: (input: { sessionId: string }) => ["idols", "battlePair", input],
-          queryOptions: (input: { sessionId: string }) => ({
+          queryKey: (input: BattlePairInput) => ["idols", "battlePair", input],
+          queryOptions: (input: BattlePairInput) => ({
             queryKey: ["idols", "battlePair", input],
-            queryFn: () => battlePairFn(),
+            queryFn: () => {
+              battlePairCalls.push(input);
+              return battlePairFn();
+            },
           }),
         },
       },
@@ -63,6 +73,7 @@ describe("BattleComponent (投票画面)", () => {
     mockNavigate.mockReset();
     battlePairFn.mockReset();
     submitVoteFn.mockReset();
+    battlePairCalls.length = 0;
     window.localStorage.clear();
   });
 
@@ -241,6 +252,59 @@ describe("BattleComponent (投票画面)", () => {
     for (const img of images) {
       expect(img.style.objectPosition).toBe("center 25%");
     }
+  });
+
+  test("投票後の再取得では表示済みアイドルを excludeIdolIds で渡す", async () => {
+    battlePairFn
+      .mockResolvedValueOnce({
+        idolA: {
+          id: "idol-a",
+          name: "アイドルA",
+          group: "グループA",
+          photo: { id: "photo-a", imageUrl: "https://example.com/a.jpg" },
+        },
+        idolB: {
+          id: "idol-b",
+          name: "アイドルB",
+          group: "グループB",
+          photo: { id: "photo-b", imageUrl: "https://example.com/b.jpg" },
+        },
+      })
+      .mockResolvedValue({
+        idolA: {
+          id: "idol-c",
+          name: "アイドルC",
+          group: "グループC",
+          photo: { id: "photo-c", imageUrl: "https://example.com/c.jpg" },
+        },
+        idolB: {
+          id: "idol-d",
+          name: "アイドルD",
+          group: "グループD",
+          photo: { id: "photo-d", imageUrl: "https://example.com/d.jpg" },
+        },
+      });
+    submitVoteFn.mockResolvedValue({ success: true });
+
+    const user = userEvent.setup();
+    renderWithProviders(<BattleComponent />);
+
+    const panelA = await screen.findByRole("button", { name: /グループA アイドルA に投票/ });
+    await user.click(panelA);
+
+    await waitFor(() => {
+      expect(
+        screen.getByRole("button", { name: /グループC アイドルC に投票/ }),
+      ).toBeInTheDocument();
+    });
+
+    expect(battlePairCalls[0]).toEqual({
+      sessionId: "test-session-id",
+      excludeIdolIds: [],
+    });
+
+    const secondCall = battlePairCalls.at(-1);
+    expect(secondCall?.excludeIdolIds).toEqual(["idol-a", "idol-b"]);
   });
 
   test("成功した投票は画面に表示せず localStorage にのみ保存する (写真を覆わないため)", async () => {
