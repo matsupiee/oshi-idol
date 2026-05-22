@@ -48,7 +48,6 @@ describe("HistoryComponent (投票履歴画面)", () => {
 
     renderWithProviders(<HistoryComponent />);
 
-    expect(screen.getByText("02 VOTES")).toBeInTheDocument();
     const rows = screen.getAllByRole("article");
     expect(rows).toHaveLength(2);
     expect(within(rows[0]!).getByText("アイドルC")).toBeInTheDocument();

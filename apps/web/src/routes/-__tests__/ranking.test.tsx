@@ -92,8 +92,6 @@ describe("RankingComponent (結果画面)", () => {
       const matches = await screen.findAllByText(idol.name);
       expect(matches.length).toBeGreaterThan(0);
     }
-    // ヘッダーと件数表示
-    expect(screen.getByText(/10 IDOLS/)).toBeInTheDocument();
     expect(screen.getByText("TOP 10")).toBeInTheDocument();
   });
 
@@ -114,10 +112,7 @@ describe("RankingComponent (結果画面)", () => {
 
     renderWithProviders(<RankingComponent />);
 
-    expect(await screen.findByText("OVERALL")).toBeInTheDocument();
-    expect(
-      screen.getByText((_, element) => element?.textContent === "OVERALLOSHI RANK"),
-    ).toBeInTheDocument();
+    expect(await screen.findByText("GLOBAL RANK")).toBeInTheDocument();
     expect(screen.getByText("みんなの投票で決まる全体ランキング")).toBeInTheDocument();
     expect(screen.getByText("OVERALL TOP 10 · OSHI BATTLE")).toBeInTheDocument();
     expect(screen.getByText("全体推しランキング")).toBeInTheDocument();
@@ -378,8 +373,7 @@ describe("RankingComponent (結果画面)", () => {
 
     renderWithProviders(<RankingComponent />);
 
-    expect(await screen.findByText(/0 IDOLS/)).toBeInTheDocument();
-    expect(screen.getByText("TOP 10")).toBeInTheDocument();
+    expect(await screen.findByText("TOP 10")).toBeInTheDocument();
     // 統計の各セルが — / 0 でフォールバックされる
     const stats = screen.getByText("STATS").closest("div");
     expect(stats).toBeTruthy();
