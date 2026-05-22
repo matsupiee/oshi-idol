@@ -15,7 +15,7 @@ export function HistoryComponent() {
   return (
     <div className="absolute inset-0 overflow-y-auto bg-[#0a0418] text-white">
       <div
-        className="relative px-6 pb-7 pt-14"
+        className="relative px-6 pb-7 pt-6"
         style={{
           background:
             "radial-gradient(ellipse at 50% 0%, #fff20022 0%, transparent 58%), linear-gradient(180deg, #1a0830 0%, #0a0418 100%)",
@@ -25,27 +25,11 @@ export function HistoryComponent() {
         <button
           type="button"
           onClick={() => navigate({ to: "/" })}
-          className="mb-7 inline-flex items-center gap-2"
-          style={{
-            background: "transparent",
-            border: "1px solid #ff2e8888",
-            borderRadius: 3,
-            color: "#ff2e88",
-            cursor: "pointer",
-            fontFamily: '"JetBrains Mono", monospace',
-            fontSize: 10,
-            letterSpacing: "0.16em",
-            padding: "5px 10px",
-            boxShadow: "0 0 8px #ff2e8855, inset 0 0 8px #ff2e8822",
-          }}
+          className="mb-7 inline-flex items-center gap-2 arcade-chip"
         >
           <ArrowLeft aria-hidden="true" size={13} />
           BACK
         </button>
-        <div className="mb-4 flex items-center justify-between">
-          <span className="arcade-chip">LOCAL LOG</span>
-          <span className="arcade-chip">{String(history.length).padStart(2, "0")} VOTES</span>
-        </div>
         <h1
           aria-label="MY HISTORY"
           className="m-0 leading-none"

@@ -35,13 +35,9 @@ export const web = await TanStackStart("web", {
   bindings: {
     DB: db,
     BUCKET: assets,
-    CORS_ORIGIN: isLocalDev ? (process.env.CORS_ORIGIN ?? localDevUrl) : alchemy.env.CORS_ORIGIN!,
-    BETTER_AUTH_SECRET: isLocalDev
-      ? (process.env.BETTER_AUTH_SECRET ?? localBetterAuthSecret)
-      : alchemy.secret.env.BETTER_AUTH_SECRET!,
-    BETTER_AUTH_URL: isLocalDev
-      ? (process.env.BETTER_AUTH_URL ?? localDevUrl)
-      : alchemy.env.BETTER_AUTH_URL!,
+    CORS_ORIGIN: isLocalDev ? localDevUrl : alchemy.env.CORS_ORIGIN!,
+    BETTER_AUTH_SECRET: isLocalDev ? localBetterAuthSecret : alchemy.secret.env.BETTER_AUTH_SECRET!,
+    BETTER_AUTH_URL: isLocalDev ? localDevUrl : alchemy.env.BETTER_AUTH_URL!,
   },
   wrangler: {
     transform: (spec) => {

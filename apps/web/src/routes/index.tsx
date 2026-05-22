@@ -51,8 +51,8 @@ export function HomeComponent() {
 
       {/* Top chips */}
       <div className="relative z-10 flex justify-between px-6 pt-10">
-        <span className="arcade-chip">v0.1 · DEMO</span>
-        <span className="arcade-chip">10 ROUNDS</span>
+        {/* <span className="arcade-chip">v0.1 · DEMO</span>
+        <span className="arcade-chip">10 ROUNDS</span> */}
       </div>
 
       {/* Logo block */}
@@ -148,18 +148,6 @@ export function HomeComponent() {
             sub="投票履歴"
             onClick={() => navigate({ to: "/history" })}
           />
-        </div>
-        <div
-          className="mt-4 flex justify-between"
-          style={{
-            fontFamily: '"JetBrains Mono", monospace',
-            fontSize: 10,
-            color: "rgba(255,255,255,0.4)",
-            letterSpacing: "0.15em",
-          }}
-        >
-          <span>ARCADE · SEASON 01</span>
-          <span>INSERT COIN ∞</span>
         </div>
       </div>
 
