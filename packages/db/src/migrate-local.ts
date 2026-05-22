@@ -7,16 +7,34 @@ const d1Dir = resolve(
   "../../../.alchemy/miniflare/v3/d1/miniflare-D1DatabaseObject",
 );
 
-let sqliteFile: string | undefined;
+let candidates: string[] = [];
 try {
-  sqliteFile = readdirSync(d1Dir).find((f) => f.endsWith(".sqlite") && f !== "metadata.sqlite");
+  candidates = readdirSync(d1Dir).filter((f) => f.endsWith(".sqlite") && f !== "metadata.sqlite");
 } catch {
   // ディレクトリが存在しない場合
 }
 
-if (!sqliteFile) {
+if (candidates.length === 0) {
   console.error("ローカル D1 SQLite が見つかりません。先に `bun run dev` を実行してください。");
   process.exit(1);
+}
+
+// d1_migrations レコード数が最大のファイルを選ぶ（最も進んだ正しい DB）
+let sqliteFile = candidates[0]!;
+let maxCount = -1;
+for (const f of candidates) {
+  try {
+    const c = createClient({ url: `file:${join(d1Dir, f)}` });
+    const r = await c.execute("SELECT COUNT(*) as n FROM d1_migrations");
+    const n = Number(r.rows[0]?.n ?? 0);
+    if (n > maxCount) {
+      maxCount = n;
+      sqliteFile = f;
+    }
+    await c.close();
+  } catch {
+    // d1_migrations テーブルがない場合はスキップ
+  }
 }
 
 const client = createClient({ url: `file:${join(d1Dir, sqliteFile)}` });
