@@ -3,7 +3,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { getSessionId } from "@/lib/session";
-import { addVoteHistoryEntry, getVoteHistory, type VoteHistoryEntry } from "@/lib/vote-history";
+import { addVoteHistoryEntry } from "@/lib/vote-history";
 import { useTRPC } from "@/utils/trpc";
 
 export const Route = createFileRoute("/battle")({
@@ -27,7 +27,6 @@ export function BattleComponent() {
   const [winnerIdx, setWinnerIdx] = useState<0 | 1 | null>(null);
   const [phase, setPhase] = useState<"idle" | "locked" | "exit">("idle");
   const [bursts, setBursts] = useState<Burst[]>([]);
-  const [voteHistory, setVoteHistory] = useState<VoteHistoryEntry[]>(() => getVoteHistory());
   const burstIdRef = useRef(0);
   const exitTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const sessionId = getSessionId();
@@ -64,22 +63,20 @@ export function BattleComponent() {
           loserPhotoId: loserPhotoId ?? "",
           sessionId,
         });
-        setVoteHistory(
-          addVoteHistoryEntry({
-            winner: {
-              id: winner.id,
-              name: winner.name,
-              group: winner.group,
-              photoId: winnerPhotoId,
-            },
-            loser: {
-              id: loser.id,
-              name: loser.name,
-              group: loser.group,
-              photoId: loserPhotoId,
-            },
-          }),
-        );
+        addVoteHistoryEntry({
+          winner: {
+            id: winner.id,
+            name: winner.name,
+            group: winner.group,
+            photoId: winnerPhotoId,
+          },
+          loser: {
+            id: loser.id,
+            name: loser.name,
+            group: loser.group,
+            photoId: loserPhotoId,
+          },
+        });
 
         const newCount = voteCount + 1;
         setVoteCount(newCount);
@@ -230,8 +227,6 @@ export function BattleComponent() {
       {/* CRT scanlines */}
       <div className="arcade-scanlines" />
 
-      <VoteHistoryPanel history={voteHistory} />
-
       {/* HUD bottom */}
       <div
         className="absolute bottom-6 left-0 right-0 z-30 text-center"
@@ -245,81 +240,6 @@ export function BattleComponent() {
         TAP TO VOTE · 推しを選べ
       </div>
     </div>
-  );
-}
-
-function VoteHistoryPanel({ history }: { history: VoteHistoryEntry[] }) {
-  const recentHistory = history.slice(0, 3);
-
-  if (recentHistory.length === 0) return null;
-
-  return (
-    <section
-      aria-label="過去の投票結果"
-      className="absolute bottom-14 left-4 z-30 w-[min(320px,calc(100%-2rem))]"
-      style={{
-        border: "1px solid rgba(255,255,255,0.18)",
-        background: "rgba(10,4,24,0.72)",
-        boxShadow: "0 0 18px rgba(255,46,136,0.26)",
-        backdropFilter: "blur(10px)",
-        padding: 10,
-      }}
-    >
-      <h2
-        style={{
-          fontFamily: '"JetBrains Mono", monospace',
-          fontSize: 10,
-          letterSpacing: "0.12em",
-          color: "#ff2e88",
-          marginBottom: 8,
-        }}
-      >
-        投票履歴
-      </h2>
-      <ol className="space-y-2">
-        {recentHistory.map((entry) => (
-          <li
-            key={`${entry.votedAt}-${entry.winner.id}-${entry.loser.id}`}
-            className="grid grid-cols-[1fr_auto] gap-2"
-          >
-            <div className="min-w-0">
-              <div
-                className="truncate"
-                style={{
-                  fontFamily: '"Noto Sans JP", sans-serif',
-                  fontSize: 13,
-                  fontWeight: 700,
-                  color: "#fff",
-                }}
-              >
-                {entry.winner.name}
-              </div>
-              <div
-                className="truncate"
-                style={{
-                  fontFamily: '"Noto Sans JP", sans-serif',
-                  fontSize: 11,
-                  color: "rgba(255,255,255,0.64)",
-                }}
-              >
-                {entry.loser.name} に勝利
-              </div>
-            </div>
-            <span
-              className="truncate"
-              style={{
-                fontFamily: '"JetBrains Mono", monospace',
-                fontSize: 10,
-                color: "rgba(255,255,255,0.48)",
-                alignSelf: "center",
-              }}
-            >
-              {entry.winner.group}
-            </span>
-          </li>
-        ))}
-      </ol>
-    </section>
   );
 }
 
@@ -359,6 +279,7 @@ function BattlePanel({ idol, position, state, onTap, disabled }: BattlePanelProp
       type="button"
       onClick={onTap}
       disabled={disabled}
+      aria-label={`${idol.group} ${idol.name} に投票`}
       className={`${positionClass} cursor-pointer overflow-hidden border-none bg-transparent p-0 ${animClass}`}
       style={{
         clipPath,
@@ -407,35 +328,6 @@ function BattlePanel({ idol, position, state, onTap, disabled }: BattlePanelProp
           boxShadow: position === "top" ? "inset 0 0 60px #ff2e8844" : "inset 0 0 60px #9d4dff44",
         }}
       />
-
-      {/* Nameplate */}
-      <div
-        className="pointer-events-none absolute left-6 right-6"
-        style={position === "top" ? { top: 90 } : { bottom: 60 }}
-      >
-        <div
-          style={{
-            fontFamily: '"JetBrains Mono", monospace',
-            fontSize: 10,
-            letterSpacing: "0.2em",
-            color: "rgba(255,255,255,0.6)",
-            marginBottom: 4,
-          }}
-        >
-          {idol.group}
-        </div>
-        <div
-          style={{
-            fontFamily: '"Bungee", monospace',
-            fontSize: "clamp(28px, 8vw, 44px)",
-            lineHeight: 0.95,
-            color: "#fff",
-            textShadow: "0 0 12px #ff2e88, 0 0 24px #9d4dff",
-          }}
-        >
-          {idol.name}
-        </div>
-      </div>
     </button>
   );
 }

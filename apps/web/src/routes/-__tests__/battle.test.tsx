@@ -1,5 +1,5 @@
 import { describe, expect, test, vi, beforeEach } from "vitest";
-import { screen, waitFor, within } from "@testing-library/react";
+import { screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 
 const mockNavigate = vi.fn();
@@ -82,7 +82,7 @@ describe("BattleComponent (投票画面)", () => {
     expect(await screen.findByText(/エラーが発生しました/)).toBeInTheDocument();
   });
 
-  test("ペア取得後に両アイドルと ROUND 表示が出る", async () => {
+  test("ペア取得後に両アイドルの写真と ROUND 表示が出る (写真を覆わないようアイドル名は非表示)", async () => {
     battlePairFn.mockResolvedValue({
       idolA: {
         id: "idol-a",
@@ -100,11 +100,14 @@ describe("BattleComponent (投票画面)", () => {
 
     renderWithProviders(<BattleComponent />);
 
-    expect(await screen.findByText("アイドルA")).toBeInTheDocument();
-    expect(screen.getByText("アイドルB")).toBeInTheDocument();
-    expect(screen.getByText("グループA")).toBeInTheDocument();
-    expect(screen.getByText("グループB")).toBeInTheDocument();
+    expect(
+      await screen.findByRole("button", { name: /グループA アイドルA に投票/ }),
+    ).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /グループB アイドルB に投票/ })).toBeInTheDocument();
     expect(screen.getByText(/ROUND 01\/10/)).toBeInTheDocument();
+    // 写真を覆わないために、画面上にはアイドル名・グループ名のテキストは表示しない
+    expect(screen.queryByText("アイドルA")).not.toBeInTheDocument();
+    expect(screen.queryByText("グループA")).not.toBeInTheDocument();
   });
 
   test("パネルをタップすると勝者・敗者・セッションIDを渡して投票が送信される", async () => {
@@ -127,9 +130,8 @@ describe("BattleComponent (投票画面)", () => {
     const user = userEvent.setup();
     renderWithProviders(<BattleComponent />);
 
-    const panelA = (await screen.findByText("アイドルA")).closest("button");
-    expect(panelA).not.toBeNull();
-    await user.click(panelA!);
+    const panelA = await screen.findByRole("button", { name: /グループA アイドルA に投票/ });
+    await user.click(panelA);
 
     await waitFor(() => {
       expect(submitVoteFn).toHaveBeenCalledTimes(1);
@@ -164,14 +166,10 @@ describe("BattleComponent (投票画面)", () => {
     renderWithProviders(<BattleComponent />);
 
     for (let i = 0; i < 10; i++) {
-      await waitFor(() => expect(screen.getAllByText("アイドルA").length).toBeGreaterThan(0));
-      const panelA = screen
-        .getAllByRole("button")
-        .find((button) => within(button).queryByText("アイドルA"));
-      expect(panelA).toBeDefined();
+      const panelA = await screen.findByRole("button", { name: /グループA アイドルA に投票/ });
       // パネルが disabled の場合は次フレームを待つ
       await waitFor(() => expect(panelA).not.toBeDisabled());
-      await user.click(panelA!);
+      await user.click(panelA);
       await waitFor(() => {
         expect(submitVoteFn).toHaveBeenCalledTimes(i + 1);
       });
@@ -202,8 +200,8 @@ describe("BattleComponent (投票画面)", () => {
     const user = userEvent.setup();
     renderWithProviders(<BattleComponent />);
 
-    const panel = (await screen.findByText("アイドルA")).closest("button");
-    await user.click(panel!);
+    const panel = await screen.findByRole("button", { name: /グループA アイドルA に投票/ });
+    await user.click(panel);
 
     await waitFor(() => {
       expect(submitVoteFn).toHaveBeenCalledTimes(1);
@@ -211,7 +209,7 @@ describe("BattleComponent (投票画面)", () => {
 
     // 1 回目が失敗した後でも、ボタンが有効に戻り、ラウンド表示は 01 のまま
     await waitFor(() => {
-      const restored = within(document.body).getByText("アイドルA").closest("button");
+      const restored = screen.getByRole("button", { name: /グループA アイドルA に投票/ });
       expect(restored).not.toBeDisabled();
     });
     expect(screen.getByText(/ROUND 01\/10/)).toBeInTheDocument();
@@ -236,7 +234,7 @@ describe("BattleComponent (投票画面)", () => {
 
     renderWithProviders(<BattleComponent />);
 
-    await screen.findByText("アイドルA");
+    await screen.findByRole("button", { name: /グループA アイドルA に投票/ });
 
     const images = document.querySelectorAll("img");
     expect(images).toHaveLength(2);
@@ -245,7 +243,7 @@ describe("BattleComponent (投票画面)", () => {
     }
   });
 
-  test("成功した投票を localStorage に保存し、過去の投票結果として表示する", async () => {
+  test("成功した投票は画面に表示せず localStorage にのみ保存する (写真を覆わないため)", async () => {
     battlePairFn.mockResolvedValue({
       idolA: {
         id: "idol-a",
@@ -265,20 +263,21 @@ describe("BattleComponent (投票画面)", () => {
     const user = userEvent.setup();
     renderWithProviders(<BattleComponent />);
 
-    const panelA = (await screen.findByText("アイドルA")).closest("button");
-    await user.click(panelA!);
+    const panelA = await screen.findByRole("button", { name: /グループA アイドルA に投票/ });
+    await user.click(panelA);
 
     await waitFor(() => {
-      expect(screen.getByText("投票履歴")).toBeInTheDocument();
+      expect(JSON.parse(window.localStorage.getItem("oshi-vote-history") ?? "[]")).toMatchObject([
+        {
+          winner: { id: "idol-a", name: "アイドルA", group: "グループA", photoId: "photo-a" },
+          loser: { id: "idol-b", name: "アイドルB", group: "グループB", photoId: "photo-b" },
+        },
+      ]);
     });
-    const history = screen.getByRole("region", { name: "過去の投票結果" });
-    expect(within(history).getByText("アイドルA")).toBeInTheDocument();
-    expect(within(history).getByText("アイドルB に勝利")).toBeInTheDocument();
-    expect(JSON.parse(window.localStorage.getItem("oshi-vote-history") ?? "[]")).toMatchObject([
-      {
-        winner: { id: "idol-a", name: "アイドルA", group: "グループA", photoId: "photo-a" },
-        loser: { id: "idol-b", name: "アイドルB", group: "グループB", photoId: "photo-b" },
-      },
-    ]);
+
+    // 投票履歴・勝敗結果は画面に出さない
+    expect(screen.queryByText("投票履歴")).not.toBeInTheDocument();
+    expect(screen.queryByRole("region", { name: "過去の投票結果" })).not.toBeInTheDocument();
+    expect(screen.queryByText("アイドルB に勝利")).not.toBeInTheDocument();
   });
 });
