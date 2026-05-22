@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { getSessionId } from "@/lib/session";
@@ -21,6 +21,7 @@ interface Burst {
 export function BattleComponent() {
   const navigate = useNavigate();
   const trpc = useTRPC();
+  const queryClient = useQueryClient();
   const [voteCount, setVoteCount] = useState(0);
   const [voting, setVoting] = useState<string | null>(null);
   const [winnerIdx, setWinnerIdx] = useState<0 | 1 | null>(null);
@@ -35,6 +36,31 @@ export function BattleComponent() {
     trpc.idols.battlePair.queryOptions({ sessionId, excludeIdolIds: seenIdolIds }),
   );
   const submitVote = useMutation(trpc.votes.submit.mutationOptions());
+
+  // 現在のペアが表示されたら次のペアをバックグラウンドでプリフェッチ
+  useEffect(() => {
+    if (!battlePair.data) return;
+
+    const { idolA, idolB } = battlePair.data;
+    const nextExcludeIds = [...seenIdolIds, idolA.id, idolB.id];
+    const options = trpc.idols.battlePair.queryOptions({
+      sessionId,
+      excludeIdolIds: nextExcludeIds,
+    });
+
+    let cancelled = false;
+    queryClient.prefetchQuery(options).then(() => {
+      if (cancelled) return;
+      const data = queryClient.getQueryData<typeof battlePair.data>(options.queryKey);
+      for (const url of [data?.idolA.photo?.imageUrl, data?.idolB.photo?.imageUrl]) {
+        if (url) new Image().src = url;
+      }
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [battlePair.data, seenIdolIds, sessionId, queryClient, trpc.idols.battlePair]);
 
   const handleTap = useCallback(
     async (
@@ -56,6 +82,12 @@ export function BattleComponent() {
       setVoting(winner.id);
 
       exitTimerRef.current = setTimeout(() => setPhase("exit"), 380);
+
+      // 投票API待ちと並行して次のペアをプリフェッチ
+      const nextExcludeIds = [...seenIdolIds, winner.id, loser.id];
+      queryClient.prefetchQuery(
+        trpc.idols.battlePair.queryOptions({ sessionId, excludeIdolIds: nextExcludeIds }),
+      );
 
       try {
         await submitVote.mutateAsync({
@@ -103,7 +135,17 @@ export function BattleComponent() {
         setBursts([]);
       }
     },
-    [phase, voting, voteCount, sessionId, submitVote, navigate],
+    [
+      phase,
+      voting,
+      voteCount,
+      sessionId,
+      submitVote,
+      navigate,
+      seenIdolIds,
+      queryClient,
+      trpc.idols.battlePair,
+    ],
   );
 
   if (battlePair.isLoading) {
@@ -282,6 +324,7 @@ function BattlePanel({ idol, position, state, onTap, disabled }: BattlePanelProp
             alt={idol.name}
             className="h-full w-full object-cover"
             style={{ objectPosition: "center 25%" }}
+            fetchPriority="high"
           />
         ) : (
           <div
