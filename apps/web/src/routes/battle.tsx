@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { getSessionId } from "@/lib/session";
@@ -21,17 +21,19 @@ interface Burst {
 export function BattleComponent() {
   const navigate = useNavigate();
   const trpc = useTRPC();
-  const queryClient = useQueryClient();
   const [voteCount, setVoteCount] = useState(0);
   const [voting, setVoting] = useState<string | null>(null);
   const [winnerIdx, setWinnerIdx] = useState<0 | 1 | null>(null);
   const [phase, setPhase] = useState<"idle" | "locked" | "exit">("idle");
   const [bursts, setBursts] = useState<Burst[]>([]);
+  const [seenIdolIds, setSeenIdolIds] = useState<string[]>([]);
   const burstIdRef = useRef(0);
   const exitTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const sessionId = getSessionId();
 
-  const battlePair = useQuery(trpc.idols.battlePair.queryOptions({ sessionId }));
+  const battlePair = useQuery(
+    trpc.idols.battlePair.queryOptions({ sessionId, excludeIdolIds: seenIdolIds }),
+  );
   const submitVote = useMutation(trpc.votes.submit.mutationOptions());
 
   const handleTap = useCallback(
@@ -86,9 +88,8 @@ export function BattleComponent() {
           return;
         }
 
-        await queryClient.invalidateQueries({
-          queryKey: trpc.idols.battlePair.queryKey({ sessionId }),
-        });
+        // 表示済みのアイドルを除外リストに追加することで次フェッチが新しいペアになる
+        setSeenIdolIds((prev) => [...prev, winner.id, loser.id]);
       } catch {
         // ネットワークエラー時は idle に戻す
       } finally {
@@ -102,7 +103,7 @@ export function BattleComponent() {
         setBursts([]);
       }
     },
-    [phase, voting, voteCount, sessionId, submitVote, queryClient, navigate, trpc],
+    [phase, voting, voteCount, sessionId, submitVote, navigate],
   );
 
   if (battlePair.isLoading) {
