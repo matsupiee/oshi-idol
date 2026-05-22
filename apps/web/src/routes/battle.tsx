@@ -226,19 +226,6 @@ export function BattleComponent() {
 
       {/* CRT scanlines */}
       <div className="arcade-scanlines" />
-
-      {/* HUD bottom */}
-      <div
-        className="absolute bottom-6 left-0 right-0 z-30 text-center"
-        style={{
-          fontFamily: '"JetBrains Mono", monospace',
-          fontSize: 10,
-          letterSpacing: "0.2em",
-          color: "rgba(255,255,255,0.4)",
-        }}
-      >
-        TAP TO VOTE · 推しを選べ
-      </div>
     </div>
   );
 }
