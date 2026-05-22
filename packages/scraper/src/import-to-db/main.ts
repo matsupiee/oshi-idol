@@ -88,14 +88,20 @@ async function main(): Promise<void> {
 
   console.log(`Found ${profileKeys.length} profiles`);
 
-  for (const key of profileKeys) {
-    try {
-      const profile = await getJson<ProfileJson>(key);
-      await importIdol(profile);
-      console.log(`Imported: ${profile.name} (${profile.group})`);
-    } catch (err) {
-      console.warn(`Failed to import ${key}:`, err);
-    }
+  const BATCH_SIZE = 100;
+  for (let i = 0; i < profileKeys.length; i += BATCH_SIZE) {
+    const batch = profileKeys.slice(i, i + BATCH_SIZE);
+    await Promise.all(
+      batch.map(async (key) => {
+        try {
+          const profile = await getJson<ProfileJson>(key);
+          await importIdol(profile);
+          console.log(`Imported: ${profile.name} (${profile.group})`);
+        } catch (err) {
+          console.warn(`Failed to import ${key}:`, err);
+        }
+      }),
+    );
   }
 
   console.log("Done");
