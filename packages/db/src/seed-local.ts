@@ -53,10 +53,12 @@ async function seedFile(filePath: string): Promise<void> {
         .values({ naviIdolId: entry.naviIdolId, name: entry.name, group: entry.group })
         .returning();
 
+      if (!inserted) throw new Error(`アイドルのinsertに失敗しました: ${entry.name}`);
+
       if (entry.images.length > 0) {
         await db.insert(idolPhotos).values(
           entry.images.map((img, index) => ({
-            idolId: inserted!.id,
+            idolId: inserted.id,
             imageUrl: img.imageUrl,
             sortOrder: index,
           })),
