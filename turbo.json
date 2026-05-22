@@ -25,6 +25,9 @@
       "cache": false,
       "persistent": true
     },
+    "db:migrate:local": {
+      "cache": false
+    },
     "db:seed:local": {
       "cache": false
     },
