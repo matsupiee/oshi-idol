@@ -1,4 +1,4 @@
-import { readdirSync } from "fs";
+import { readFileSync, readdirSync } from "fs";
 import { join, resolve } from "path";
 
 import { createClient } from "@libsql/client";
@@ -8,22 +8,20 @@ import * as schema from "./schema";
 import { idolPhotos } from "./schema/idol_photos";
 import { idols } from "./schema/idols";
 
-const IDOL_DATA = [
-  { name: "カズハ", group: "LE SSERAFIM" },
-  { name: "サクラ", group: "LE SSERAFIM" },
-  { name: "チェウォン", group: "LE SSERAFIM" },
-  { name: "ウンチェ", group: "LE SSERAFIM" },
-  { name: "ユンジン", group: "LE SSERAFIM" },
-  { name: "ウィンター", group: "aespa" },
-  { name: "カリナ", group: "aespa" },
-  { name: "ジゼル", group: "aespa" },
-  { name: "ニンニン", group: "aespa" },
-  { name: "ハニ", group: "NewJeans" },
-  { name: "ヘリン", group: "NewJeans" },
-  { name: "ダニエル", group: "NewJeans" },
-  { name: "ミンジ", group: "NewJeans" },
-  { name: "ヘイン", group: "NewJeans" },
-];
+type SeedEntry = {
+  naviIdolId: string;
+  name: string;
+  group: string;
+  images: Array<{ imageUrl: string }>;
+};
+
+const fixturesPath = resolve(import.meta.dirname, "fixtures/seed-data.json");
+const SEED_DATA: SeedEntry[] = JSON.parse(readFileSync(fixturesPath, "utf-8")) as SeedEntry[];
+
+if (SEED_DATA.length === 0) {
+  console.log("シードデータがありません。先に `bun run db:fetch-seed-data` を実行してください。");
+  process.exit(0);
+}
 
 const d1Dir = resolve(
   import.meta.dirname,
@@ -38,7 +36,7 @@ if (sqliteFiles.length === 0) {
   throw new Error("ローカル D1 SQLite が見つかりません。先に `bun run dev` を実行してください。");
 }
 
-async function seedFile(filePath: string) {
+async function seedFile(filePath: string): Promise<void> {
   const client = createClient({ url: `file:${filePath}` });
   const db = drizzle(client, { schema });
 
@@ -49,28 +47,26 @@ async function seedFile(filePath: string) {
       return;
     }
 
-    for (const idol of IDOL_DATA) {
-      const slug = encodeURIComponent(idol.name);
+    for (const entry of SEED_DATA) {
       const [inserted] = await db
         .insert(idols)
-        .values({ name: idol.name, group: idol.group })
+        .values({ naviIdolId: entry.naviIdolId, name: entry.name, group: entry.group })
         .returning();
 
-      await db.insert(idolPhotos).values([
-        {
-          idolId: inserted!.id,
-          imageUrl: `https://picsum.photos/seed/${slug}-1/400/600`,
-          sortOrder: 0,
-        },
-        {
-          idolId: inserted!.id,
-          imageUrl: `https://picsum.photos/seed/${slug}-2/400/600`,
-          sortOrder: 1,
-        },
-      ]);
+      if (!inserted) throw new Error(`アイドルのinsertに失敗しました: ${entry.name}`);
+
+      if (entry.images.length > 0) {
+        await db.insert(idolPhotos).values(
+          entry.images.map((img, index) => ({
+            idolId: inserted.id,
+            imageUrl: img.imageUrl,
+            sortOrder: index,
+          })),
+        );
+      }
     }
 
-    console.log(`${IDOL_DATA.length} 件シード完了: ${filePath}`);
+    console.log(`${SEED_DATA.length} 件シード完了: ${filePath}`);
   } finally {
     client.close();
   }
