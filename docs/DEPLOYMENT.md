@@ -88,12 +88,13 @@ Worker URL が確定したら `apps/web/.env` の `BETTER_AUTH_URL` と `CORS_OR
 
 **Secrets（機密値）:**
 
-| キー                    | 値                                     |
-| ----------------------- | -------------------------------------- |
-| `CLOUDFLARE_API_TOKEN`  | 手順 1-2 で作成した API トークン       |
-| `CLOUDFLARE_ACCOUNT_ID` | 手順 1-1 で確認したアカウント ID       |
-| `ALCHEMY_PASSWORD`      | `packages/infra/.env` と同じパスワード |
-| `BETTER_AUTH_SECRET`    | `apps/web/.env` と同じシークレット     |
+| キー                    | 値                                                              |
+| ----------------------- | --------------------------------------------------------------- |
+| `CLOUDFLARE_API_TOKEN`  | 手順 1-2 で作成した API トークン                                |
+| `CLOUDFLARE_ACCOUNT_ID` | 手順 1-1 で確認したアカウント ID                                |
+| `ALCHEMY_PASSWORD`      | `packages/infra/.env` と同じパスワード                          |
+| `ALCHEMY_STATE_TOKEN`   | CloudflareStateStore 用トークン（`packages/infra/.env` と同じ） |
+| `BETTER_AUTH_SECRET`    | `apps/web/.env` と同じシークレット                              |
 
 **Variables（非機密値）:**
 
@@ -101,6 +102,13 @@ Worker URL が確定したら `apps/web/.env` の `BETTER_AUTH_URL` と `CORS_OR
 | ----------------- | ------------------------ |
 | `BETTER_AUTH_URL` | `https://<本番ドメイン>` |
 | `CORS_ORIGIN`     | `https://<本番ドメイン>` |
+
+### 3-2. ステージ名について
+
+ワークフローは `STAGE=hiromu` を環境変数で渡すことで、ローカルからの `alchemy deploy` と同じ Cloudflare 上のリソース（D1 / R2 / Worker）と state を共有する。
+
+- `STAGE` は Alchemy の state スコープを決める値。未設定だと `USER` (= GitHub Actions runner では `runner`) にフォールバックして state が分裂する。
+- Turbo の `envMode: "strict"` 下でも `STAGE` がタスクへ渡るよう、`turbo.json` の `deploy.passThroughEnv` に `STAGE` を含めている。値を変える場合は両方を更新する。
 
 ---
 
