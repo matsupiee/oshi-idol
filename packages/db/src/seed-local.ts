@@ -28,13 +28,33 @@ const d1Dir = resolve(
   "../../../.alchemy/miniflare/v3/d1/miniflare-D1DatabaseObject",
 );
 
-const sqliteFiles = readdirSync(d1Dir).filter(
+const candidates = readdirSync(d1Dir).filter(
   (f) => f.endsWith(".sqlite") && f !== "metadata.sqlite",
 );
 
-if (sqliteFiles.length === 0) {
+if (candidates.length === 0) {
   throw new Error("ローカル D1 SQLite が見つかりません。先に `bun run dev` を実行してください。");
 }
+
+// d1_migrations レコード数が最大のファイルを選ぶ（最も進んだ正しい DB）
+let bestFile = candidates[0]!;
+let maxCount = -1;
+for (const f of candidates) {
+  try {
+    const c = createClient({ url: `file:${join(d1Dir, f)}` });
+    const r = await c.execute("SELECT COUNT(*) as n FROM d1_migrations");
+    const n = Number(r.rows[0]?.n ?? 0);
+    if (n > maxCount) {
+      maxCount = n;
+      bestFile = f;
+    }
+    c.close();
+  } catch {
+    // d1_migrations テーブルがない場合はスキップ
+  }
+}
+
+const sqliteFiles = [bestFile];
 
 async function seedFile(filePath: string): Promise<void> {
   const client = createClient({ url: `file:${filePath}` });
