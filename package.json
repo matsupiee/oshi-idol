@@ -32,6 +32,7 @@
     "db:migrate:local": "cd apps/web && npx wrangler d1 migrations apply oshi-idol-db-local --local --config .alchemy/local/wrangler.jsonc",
     "db:studio": "turbo -F @oshi-idol/db db:studio",
     "db:seed:local": "turbo -F @oshi-idol/db db:seed:local",
+    "db:fetch-seed-data": "turbo -F @oshi-idol/scraper fetch-seed-fixtures",
     "deploy": "turbo -F @oshi-idol/infra deploy",
     "destroy": "turbo -F @oshi-idol/infra destroy",
     "check": "oxlint --ignore-pattern '.claude' && oxfmt --write"
