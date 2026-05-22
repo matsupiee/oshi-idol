@@ -4,7 +4,7 @@ import { join, resolve } from "path";
 
 const d1Dir = resolve(
   import.meta.dirname,
-  "../../.alchemy/miniflare/v3/d1/miniflare-D1DatabaseObject",
+  "../../../.alchemy/miniflare/v3/d1/miniflare-D1DatabaseObject",
 );
 
 let sqliteFile: string | undefined;
