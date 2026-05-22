@@ -29,7 +29,7 @@
     "check-types": "turbo check-types",
     "dev:web": "turbo -F web dev",
     "db:generate": "turbo -F @oshi-idol/db db:generate",
-    "db:migrate:local": "cd apps/web && npx wrangler d1 migrations apply oshi-idol-db-local --local --config .alchemy/local/wrangler.jsonc",
+    "db:migrate:local": "turbo -F @oshi-idol/db db:migrate:local",
     "db:studio": "turbo -F @oshi-idol/db db:studio",
     "db:seed:local": "turbo -F @oshi-idol/db db:seed:local",
     "db:fetch-seed-data": "turbo -F @oshi-idol/scraper fetch-seed-fixtures",
