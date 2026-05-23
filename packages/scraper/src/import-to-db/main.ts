@@ -64,9 +64,15 @@ async function main(): Promise<void> {
   console.log(`Found ${profileKeys.length} profiles`);
 
   const BATCH_SIZE = 100;
-  // Drizzle は $defaultFn(id) を含む 4 カラム分を param として送る: id, idolId, imageUrl, sortOrder
-  // SQLite 変数上限 999 / 4 = 249 行/クエリ
-  const PHOTO_CHUNK = 249;
+  // D1 API の SQL バインドパラメータ上限は約 100/クエリ
+  // idols: 7 params/行 (id, navi_idol_id, name, group, elo_rating, wins, losses) + 1 (ON CONFLICT updated_at)
+  //   → 最大 10 行/クエリ (10 × 7 + 1 = 71 params)
+  // idolPhotos: 4 params/行 (id, idol_id, image_url, sort_order)
+  //   → 最大 20 行/クエリ (20 × 4 = 80 params)
+  // SELECT の inArray (idol_id IN (...)): 最大 70 件/クエリ
+  const IDOL_CHUNK = 10;
+  const PHOTO_CHUNK = 20;
+  const SELECT_CHUNK = 70;
 
   for (let i = 0; i < profileKeys.length; i += BATCH_SIZE) {
     const batch = profileKeys.slice(i, i + BATCH_SIZE);
@@ -87,47 +93,62 @@ async function main(): Promise<void> {
 
     if (profiles.length === 0) continue;
 
-    // 100 件を 1 クエリでバルク upsert
-    const upserted = await db
-      .insert(idols)
-      .values(
-        profiles.map((p) => ({
-          naviIdolId: p.naviIdolId,
-          name: p.name,
-          group: p.group,
-        })),
-      )
-      .onConflictDoUpdate({
-        target: idols.naviIdolId,
-        set: {
-          name: sql`excluded.name`,
-          group: sql`excluded.group`,
-        },
-      })
-      .returning({ id: idols.id, naviIdolId: idols.naviIdolId });
+    // idols を IDOL_CHUNK 行ずつ upsert（D1 パラメータ上限対策）
+    const allUpserted: Array<{ id: string; naviIdolId: string }> = [];
+    for (let j = 0; j < profiles.length; j += IDOL_CHUNK) {
+      const chunk = profiles.slice(j, j + IDOL_CHUNK);
+      const upsertedChunk = await db
+        .insert(idols)
+        .values(
+          chunk.map((p) => ({
+            naviIdolId: p.naviIdolId,
+            name: p.name,
+            group: p.group,
+          })),
+        )
+        .onConflictDoUpdate({
+          target: idols.naviIdolId,
+          set: {
+            name: sql`excluded.name`,
+            group: sql`excluded."group"`,
+          },
+        })
+        .returning({ id: idols.id, naviIdolId: idols.naviIdolId });
+      for (const r of upsertedChunk) {
+        if (r.naviIdolId !== null) {
+          allUpserted.push({ id: r.id, naviIdolId: r.naviIdolId });
+        }
+      }
+    }
 
-    const idMap = new Map(upserted.map((r) => [r.naviIdolId, r.id]));
+    const idMap = new Map(allUpserted.map((r) => [r.naviIdolId, r.id]));
 
-    // バッチ内の全アイドルの写真を 1 クエリで一括削除
-    await db.delete(idolPhotos).where(
-      inArray(
-        idolPhotos.idolId,
-        upserted.map((r) => r.id),
-      ),
-    );
+    // 既存写真の imageUrl を取得して重複 INSERT を防ぐ
+    // votes が idol_photos を参照しているため DELETE は行わない
+    const allIds = allUpserted.map((r) => r.id);
+    const existingUrlSet = new Set<string>();
+    for (let j = 0; j < allIds.length; j += SELECT_CHUNK) {
+      const existing = await db
+        .select({ imageUrl: idolPhotos.imageUrl })
+        .from(idolPhotos)
+        .where(inArray(idolPhotos.idolId, allIds.slice(j, j + SELECT_CHUNK)));
+      for (const p of existing) existingUrlSet.add(p.imageUrl);
+    }
 
-    // 全プロファイルの写真を収集
+    // 既存 DB にない写真のみ収集
     const allPhotos = profiles.flatMap((p) => {
       const idolId = idMap.get(p.naviIdolId);
       if (!idolId) return [];
-      return p.images.map((img, index) => ({
-        idolId,
-        imageUrl: `${r2PublicUrl}/${img.key}`,
-        sortOrder: index,
-      }));
+      return p.images
+        .filter((img) => !existingUrlSet.has(`${r2PublicUrl}/${img.key}`))
+        .map((img, index) => ({
+          idolId,
+          imageUrl: `${r2PublicUrl}/${img.key}`,
+          sortOrder: index,
+        }));
     });
 
-    // 変数上限を超えないよう 249 行ずつ insert
+    // PHOTO_CHUNK 行ずつ insert（D1 パラメータ上限対策）
     for (let j = 0; j < allPhotos.length; j += PHOTO_CHUNK) {
       await db.insert(idolPhotos).values(allPhotos.slice(j, j + PHOTO_CHUNK));
     }
