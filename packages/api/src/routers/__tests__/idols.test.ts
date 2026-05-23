@@ -143,4 +143,35 @@ describe("idols.battleQueue", () => {
 
     expect(pairs).toHaveLength(1);
   });
+
+  test("除外後に 2 体未満しか残らない場合は全プールにフォールバックして異なる 2 体を返す", async () => {
+    const inserted = await db
+      .insert(idols)
+      .values([
+        { name: "A", group: "G" },
+        { name: "B", group: "G" },
+      ])
+      .returning();
+
+    for (const idol of inserted) {
+      await db
+        .insert(idolPhotos)
+        .values({ idolId: idol.id, imageUrl: `https://example.com/${idol.id}.jpg` });
+    }
+
+    const caller = createCaller({ auth: null, session: null, db });
+    // 1 体しか残らない除外リストでもフォールバックして 2 体のペアを返す
+    const pairs = await caller.battleQueue({
+      sessionId: "s1",
+      excludeIdolIds: [inserted[0]!.id],
+      count: 1,
+    });
+
+    expect(pairs).toHaveLength(1);
+    const pair = pairs[0]!;
+    expect(pair.idolA.id).not.toBe(pair.idolB.id);
+    const allIds = inserted.map((i) => i.id);
+    expect(allIds).toContain(pair.idolA.id);
+    expect(allIds).toContain(pair.idolB.id);
+  });
 });

@@ -41,12 +41,16 @@ export const idolsRouter = router({
       const excludeIds = input.excludeIdolIds ?? [];
       const count = input.count;
 
-      const available = await db.query.idols.findMany({
+      let availableIdols = await db.query.idols.findMany({
         with: { photos: true },
         where: excludeIds.length > 0 ? notInArray(idols.id, excludeIds) : undefined,
       });
 
-      if (available.length < 2) {
+      if (availableIdols.length < 2 && excludeIds.length > 0) {
+        availableIdols = await db.query.idols.findMany({ with: { photos: true } });
+      }
+
+      if (availableIdols.length < 2) {
         throw new TRPCError({
           code: "NOT_FOUND",
           message: "Not enough idols for a battle",
@@ -54,7 +58,7 @@ export const idolsRouter = router({
       }
 
       // Fisher-Yates shuffle
-      const shuffled = [...available];
+      const shuffled = [...availableIdols];
       for (let i = shuffled.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
         [shuffled[i], shuffled[j]] = [shuffled[j]!, shuffled[i]!];

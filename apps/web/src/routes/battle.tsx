@@ -216,7 +216,7 @@ export function BattleComponent() {
             top: "50%",
             height: 8,
             background: "linear-gradient(90deg, transparent, #ff2e88, #fff, #9d4dff, transparent)",
-            transform: "translateY(-50%) rotate(-22deg)",
+            transform: "translateY(-50%) rotate(-2deg)",
             boxShadow: "0 0 20px #ff2e88, 0 0 40px #9d4dff",
             opacity: 0.9,
           }}
@@ -225,13 +225,13 @@ export function BattleComponent() {
       <div
         className="pointer-events-none absolute left-1/2 top-1/2 z-[6]"
         style={{
-          transform: "translate(-50%, -50%) rotate(-22deg)",
-          padding: "8px 20px",
+          transform: "translate(-50%, -50%) rotate(-2deg)",
+          padding: "2px 10px",
           background: "#0a0418",
           border: "2px solid #ff2e88",
-          boxShadow: "0 0 24px #ff2e88, inset 0 0 8px #9d4dff",
+          boxShadow: "0 0 16px #ff2e88, inset 0 0 8px #9d4dff",
           fontFamily: '"Bungee", monospace',
-          fontSize: 32,
+          fontSize: 24,
           color: "#fff",
           letterSpacing: "0.06em",
           textShadow: "0 0 8px #ff2e88",
@@ -272,13 +272,13 @@ function BattlePanel({ idol, position, state, onTap, disabled }: BattlePanelProp
 
   const clipPath =
     position === "top"
-      ? "polygon(0 0, 100% 0, 100% 63%, 0 100%)"
-      : "polygon(0 37%, 100% 0, 100% 100%, 0 100%)";
+      ? "polygon(0 0, 100% 0, 100% 88%, 0 100%)"
+      : "polygon(0 12%, 100% 0, 100% 100%, 0 100%)";
 
   const positionClass =
     position === "top"
-      ? "absolute top-0 left-0 right-0 h-[60%]"
-      : "absolute bottom-0 left-0 right-0 h-[60%]";
+      ? "absolute top-0 left-0 right-0 h-[52%]"
+      : "absolute bottom-0 left-0 right-0 h-[52%]";
 
   return (
     <button
@@ -298,8 +298,8 @@ function BattlePanel({ idol, position, state, onTap, disabled }: BattlePanelProp
           <img
             src={idol.photo.imageUrl}
             alt={idol.name}
-            className="h-full w-full object-cover"
-            style={{ objectPosition: "center 25%" }}
+            className="h-[120%] w-[120%] object-cover"
+            style={{ objectPosition: "center 30%" }}
             fetchPriority="high"
           />
         ) : (
@@ -323,8 +323,8 @@ function BattlePanel({ idol, position, state, onTap, disabled }: BattlePanelProp
         style={{
           background:
             position === "top"
-              ? "linear-gradient(180deg, transparent 40%, rgba(10,4,24,0.85) 100%)"
-              : "linear-gradient(0deg, transparent 40%, rgba(10,4,24,0.85) 100%)",
+              ? "linear-gradient(180deg, transparent 40%, rgba(10,4,24,0.2) 100%)"
+              : "linear-gradient(0deg, transparent 40%, rgba(10,4,24,0.2) 100%)",
         }}
       />
 

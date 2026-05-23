@@ -191,7 +191,7 @@ describe("BattleComponent (投票画面)", () => {
     expect(mockNavigate).not.toHaveBeenCalled();
   });
 
-  test("各パネルの画像は object-position: center 25% で表示される", async () => {
+  test("各パネルの画像は object-position: center 30% で表示される", async () => {
     battleQueueFn.mockResolvedValue([PAIR_AB]);
 
     renderWithProviders(<BattleComponent />);
@@ -201,7 +201,7 @@ describe("BattleComponent (投票画面)", () => {
     const images = document.querySelectorAll("img");
     expect(images).toHaveLength(2);
     for (const img of images) {
-      expect(img.style.objectPosition).toBe("center 25%");
+      expect(img.style.objectPosition).toBe("center 30%");
     }
   });
 
