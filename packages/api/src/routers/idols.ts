@@ -28,16 +28,18 @@ export const idolsRouter = router({
     }));
   }),
 
-  battlePair: publicProcedure
+  battleQueue: publicProcedure
     .input(
       z.object({
         sessionId: z.string(),
         excludeIdolIds: z.array(z.string()).optional(),
+        count: z.number().min(1).max(20).default(20),
       }),
     )
     .query(async ({ input, ctx }) => {
       const db = ctx.db;
       const excludeIds = input.excludeIdolIds ?? [];
+      const count = input.count;
 
       let availableIdols = await db.query.idols.findMany({
         with: { photos: true },
@@ -51,52 +53,50 @@ export const idolsRouter = router({
       if (availableIdols.length < 2) {
         throw new TRPCError({
           code: "NOT_FOUND",
-          message: "Not enough idols for a battle pair",
+          message: "Not enough idols for a battle",
         });
       }
 
-      const indexA = Math.floor(Math.random() * availableIdols.length);
-      let indexB = Math.floor(Math.random() * (availableIdols.length - 1));
-      if (indexB >= indexA) {
-        indexB += 1;
+      // Fisher-Yates shuffle
+      const shuffled = [...availableIdols];
+      for (let i = shuffled.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [shuffled[i], shuffled[j]] = [shuffled[j]!, shuffled[i]!];
       }
 
-      const idolA = availableIdols[indexA];
-      const idolB = availableIdols[indexB];
+      const pairs = [];
+      for (let i = 0; i + 1 < shuffled.length && pairs.length < count; i += 2) {
+        const idolA = shuffled[i]!;
+        const idolB = shuffled[i + 1]!;
+        const photoA =
+          idolA.photos.length > 0
+            ? idolA.photos[Math.floor(Math.random() * idolA.photos.length)]!
+            : null;
+        const photoB =
+          idolB.photos.length > 0
+            ? idolB.photos[Math.floor(Math.random() * idolB.photos.length)]!
+            : null;
 
-      if (!idolA || !idolB) {
-        throw new TRPCError({
-          code: "NOT_FOUND",
-          message: "Failed to select battle pair",
+        pairs.push({
+          idolA: {
+            id: idolA.id,
+            name: idolA.name,
+            group: idolA.group,
+            photo: photoA
+              ? { id: photoA.id, imageUrl: photoA.imageUrl }
+              : { id: null, imageUrl: null },
+          },
+          idolB: {
+            id: idolB.id,
+            name: idolB.name,
+            group: idolB.group,
+            photo: photoB
+              ? { id: photoB.id, imageUrl: photoB.imageUrl }
+              : { id: null, imageUrl: null },
+          },
         });
       }
 
-      const photoA =
-        idolA.photos.length > 0
-          ? idolA.photos[Math.floor(Math.random() * idolA.photos.length)]
-          : null;
-      const photoB =
-        idolB.photos.length > 0
-          ? idolB.photos[Math.floor(Math.random() * idolB.photos.length)]
-          : null;
-
-      return {
-        idolA: {
-          id: idolA.id,
-          name: idolA.name,
-          group: idolA.group,
-          photo: photoA
-            ? { id: photoA.id, imageUrl: photoA.imageUrl }
-            : { id: null, imageUrl: null },
-        },
-        idolB: {
-          id: idolB.id,
-          name: idolB.name,
-          group: idolB.group,
-          photo: photoB
-            ? { id: photoB.id, imageUrl: photoB.imageUrl }
-            : { id: null, imageUrl: null },
-        },
-      };
+      return pairs;
     }),
 });

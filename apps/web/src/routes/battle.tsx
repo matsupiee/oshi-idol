@@ -6,31 +6,29 @@ import { getSessionId } from "@/lib/session";
 import { addVoteHistoryEntry } from "@/lib/vote-history";
 import { useTRPC } from "@/utils/trpc";
 
-const SEEN_IDOLS_KEY = "oshi-seen-idol-ids";
-const COOLDOWN_IDOL_COUNT = 200;
-
-function loadSeenIdolIds(): string[] {
-  try {
-    return JSON.parse(localStorage.getItem(SEEN_IDOLS_KEY) ?? "[]");
-  } catch {
-    return [];
-  }
-}
-
-function saveSeenIdolIds(ids: string[]): void {
-  localStorage.setItem(SEEN_IDOLS_KEY, JSON.stringify(ids));
-}
-
 export const Route = createFileRoute("/battle")({
   component: BattleComponent,
 });
 
 const MAX_VOTES = 10;
+const QUEUE_SIZE = 20;
 
 interface Burst {
   id: number;
   x: number;
   y: number;
+}
+
+interface IdolData {
+  id: string;
+  name: string;
+  group: string;
+  photo: { id: string; imageUrl: string } | { id: null; imageUrl: null } | null;
+}
+
+interface BattlePair {
+  idolA: IdolData;
+  idolB: IdolData;
 }
 
 export function BattleComponent() {
@@ -41,15 +39,27 @@ export function BattleComponent() {
   const [winnerIdx, setWinnerIdx] = useState<0 | 1 | null>(null);
   const [phase, setPhase] = useState<"idle" | "locked" | "exit">("idle");
   const [bursts, setBursts] = useState<Burst[]>([]);
-  const [seenIdolIds, setSeenIdolIds] = useState<string[]>(() => loadSeenIdolIds());
+  const [queue, setQueue] = useState<BattlePair[]>([]);
   const burstIdRef = useRef(0);
   const exitTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const sessionId = getSessionId();
 
-  const battlePair = useQuery(
-    trpc.idols.battlePair.queryOptions({ sessionId, excludeIdolIds: seenIdolIds }),
+  const battleQueue = useQuery(
+    trpc.idols.battleQueue.queryOptions({ sessionId, count: QUEUE_SIZE }),
   );
   const submitVote = useMutation(trpc.votes.submit.mutationOptions());
+
+  // 取得したキューをローカルstateに展開し、2番目以降の画像をプリロード
+  useEffect(() => {
+    if (!battleQueue.data || queue.length > 0) return;
+    setQueue(battleQueue.data);
+    for (const pair of battleQueue.data.slice(1)) {
+      if (pair.idolA.photo?.imageUrl) new Image().src = pair.idolA.photo.imageUrl;
+      if (pair.idolB.photo?.imageUrl) new Image().src = pair.idolB.photo.imageUrl;
+    }
+  }, [battleQueue.data, queue.length]);
+
+  const currentPair = queue[0] ?? null;
 
   const handleTap = useCallback(
     async (
@@ -103,12 +113,8 @@ export function BattleComponent() {
           return;
         }
 
-        // 表示済みのアイドルを除外リストに追加することで次フェッチが新しいペアになる
-        setSeenIdolIds((prev) => {
-          const next = [...prev, winner.id, loser.id].slice(-COOLDOWN_IDOL_COUNT);
-          saveSeenIdolIds(next);
-          return next;
-        });
+        // キューから現在のペアを取り除いて次へ（API 再フェッチなし）
+        setQueue((prev) => prev.slice(1));
       } catch {
         // ネットワークエラー時は idle に戻す
       } finally {
@@ -125,7 +131,7 @@ export function BattleComponent() {
     [phase, voting, voteCount, sessionId, submitVote, navigate],
   );
 
-  if (battlePair.isLoading) {
+  if (battleQueue.isLoading) {
     return (
       <div className="absolute inset-0 flex items-center justify-center bg-[#0a0418]">
         <span
@@ -142,7 +148,7 @@ export function BattleComponent() {
     );
   }
 
-  if (battlePair.isError || !battlePair.data) {
+  if (battleQueue.isError || !currentPair) {
     return (
       <div className="absolute inset-0 flex items-center justify-center bg-[#0a0418]">
         <span style={{ color: "#ff4444", fontFamily: '"Noto Sans JP", sans-serif' }}>
@@ -152,7 +158,7 @@ export function BattleComponent() {
     );
   }
 
-  const { idolA, idolB } = battlePair.data;
+  const { idolA, idolB } = currentPair;
 
   return (
     <div className="absolute inset-0 overflow-hidden bg-[#0a0418] text-white">
@@ -252,13 +258,6 @@ export function BattleComponent() {
 
 // ── BattlePanel ──────────────────────────────────────────────────
 
-interface IdolData {
-  id: string;
-  name: string;
-  group: string;
-  photo: { id: string; imageUrl: string } | { id: null; imageUrl: null } | null;
-}
-
 interface BattlePanelProps {
   idol: IdolData;
   position: "top" | "bottom";
@@ -301,6 +300,7 @@ function BattlePanel({ idol, position, state, onTap, disabled }: BattlePanelProp
             alt={idol.name}
             className="h-[120%] w-[120%] object-cover"
             style={{ objectPosition: "center 30%" }}
+            fetchPriority="high"
           />
         ) : (
           <div
