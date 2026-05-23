@@ -6,6 +6,21 @@ import { getSessionId } from "@/lib/session";
 import { addVoteHistoryEntry } from "@/lib/vote-history";
 import { useTRPC } from "@/utils/trpc";
 
+const SEEN_IDOLS_KEY = "oshi-seen-idol-ids";
+const COOLDOWN_IDOL_COUNT = 200;
+
+function loadSeenIdolIds(): string[] {
+  try {
+    return JSON.parse(localStorage.getItem(SEEN_IDOLS_KEY) ?? "[]");
+  } catch {
+    return [];
+  }
+}
+
+function saveSeenIdolIds(ids: string[]): void {
+  localStorage.setItem(SEEN_IDOLS_KEY, JSON.stringify(ids));
+}
+
 export const Route = createFileRoute("/battle")({
   component: BattleComponent,
 });
@@ -26,7 +41,7 @@ export function BattleComponent() {
   const [winnerIdx, setWinnerIdx] = useState<0 | 1 | null>(null);
   const [phase, setPhase] = useState<"idle" | "locked" | "exit">("idle");
   const [bursts, setBursts] = useState<Burst[]>([]);
-  const [seenIdolIds, setSeenIdolIds] = useState<string[]>([]);
+  const [seenIdolIds, setSeenIdolIds] = useState<string[]>(() => loadSeenIdolIds());
   const burstIdRef = useRef(0);
   const exitTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const sessionId = getSessionId();
@@ -89,7 +104,11 @@ export function BattleComponent() {
         }
 
         // 表示済みのアイドルを除外リストに追加することで次フェッチが新しいペアになる
-        setSeenIdolIds((prev) => [...prev, winner.id, loser.id]);
+        setSeenIdolIds((prev) => {
+          const next = [...prev, winner.id, loser.id].slice(-COOLDOWN_IDOL_COUNT);
+          saveSeenIdolIds(next);
+          return next;
+        });
       } catch {
         // ネットワークエラー時は idle に戻す
       } finally {
