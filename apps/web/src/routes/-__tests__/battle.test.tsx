@@ -250,7 +250,7 @@ describe("BattleComponent (投票画面)", () => {
     const images = document.querySelectorAll("img");
     expect(images).toHaveLength(2);
     for (const img of images) {
-      expect(img.style.objectPosition).toBe("center 25%");
+      expect(img.style.objectPosition).toBe("center 30%");
     }
   });
 
