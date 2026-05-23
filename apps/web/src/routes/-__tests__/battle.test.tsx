@@ -29,28 +29,17 @@ interface BattlePair {
   idolB: BattleIdol;
 }
 
-const battlePairFn = vi.fn<() => Promise<BattlePair>>();
+const battleQueueFn = vi.fn<() => Promise<BattlePair[]>>();
 const submitVoteFn = vi.fn<(input: unknown) => Promise<{ success: true }>>();
-
-interface BattlePairInput {
-  sessionId: string;
-  excludeIdolIds?: string[];
-}
-
-const battlePairCalls: BattlePairInput[] = [];
 
 vi.mock("@/utils/trpc", () => {
   return {
     useTRPC: () => ({
       idols: {
-        battlePair: {
-          queryKey: (input: BattlePairInput) => ["idols", "battlePair", input],
-          queryOptions: (input: BattlePairInput) => ({
-            queryKey: ["idols", "battlePair", input],
-            queryFn: () => {
-              battlePairCalls.push(input);
-              return battlePairFn();
-            },
+        battleQueue: {
+          queryOptions: (input: unknown) => ({
+            queryKey: ["idols", "battleQueue", input],
+            queryFn: () => battleQueueFn(),
           }),
         },
       },
@@ -68,17 +57,37 @@ vi.mock("@/utils/trpc", () => {
 import { renderWithProviders } from "../../test/helpers";
 import { BattleComponent } from "../battle";
 
+// テスト用ペアのファクトリ
+function makePair(
+  a: { id: string; name: string; group: string },
+  b: { id: string; name: string; group: string },
+): BattlePair {
+  return {
+    idolA: { ...a, photo: { id: `photo-${a.id}`, imageUrl: `https://example.com/${a.id}.jpg` } },
+    idolB: { ...b, photo: { id: `photo-${b.id}`, imageUrl: `https://example.com/${b.id}.jpg` } },
+  };
+}
+
+const PAIR_AB = makePair(
+  { id: "idol-a", name: "アイドルA", group: "グループA" },
+  { id: "idol-b", name: "アイドルB", group: "グループB" },
+);
+
+const PAIR_CD = makePair(
+  { id: "idol-c", name: "アイドルC", group: "グループC" },
+  { id: "idol-d", name: "アイドルD", group: "グループD" },
+);
+
 describe("BattleComponent (投票画面)", () => {
   beforeEach(() => {
     mockNavigate.mockReset();
-    battlePairFn.mockReset();
+    battleQueueFn.mockReset();
     submitVoteFn.mockReset();
-    battlePairCalls.length = 0;
     window.localStorage.clear();
   });
 
   test("データ取得中は LOADING... を表示する", () => {
-    battlePairFn.mockImplementation(() => new Promise(() => {}));
+    battleQueueFn.mockImplementation(() => new Promise(() => {}));
 
     renderWithProviders(<BattleComponent />);
 
@@ -86,7 +95,7 @@ describe("BattleComponent (投票画面)", () => {
   });
 
   test("取得失敗時はエラーメッセージを表示する", async () => {
-    battlePairFn.mockRejectedValueOnce(new Error("network down"));
+    battleQueueFn.mockRejectedValueOnce(new Error("network down"));
 
     renderWithProviders(<BattleComponent />);
 
@@ -94,20 +103,7 @@ describe("BattleComponent (投票画面)", () => {
   });
 
   test("ペア取得後に両アイドルの写真と ROUND 表示が出る (写真を覆わないようアイドル名は非表示)", async () => {
-    battlePairFn.mockResolvedValue({
-      idolA: {
-        id: "idol-a",
-        name: "アイドルA",
-        group: "グループA",
-        photo: { id: "photo-a", imageUrl: "https://example.com/a.jpg" },
-      },
-      idolB: {
-        id: "idol-b",
-        name: "アイドルB",
-        group: "グループB",
-        photo: { id: "photo-b", imageUrl: "https://example.com/b.jpg" },
-      },
-    });
+    battleQueueFn.mockResolvedValue([PAIR_AB]);
 
     renderWithProviders(<BattleComponent />);
 
@@ -122,20 +118,7 @@ describe("BattleComponent (投票画面)", () => {
   });
 
   test("パネルをタップすると勝者・敗者・セッションIDを渡して投票が送信される", async () => {
-    battlePairFn.mockResolvedValue({
-      idolA: {
-        id: "idol-a",
-        name: "アイドルA",
-        group: "グループA",
-        photo: { id: "photo-a", imageUrl: "https://example.com/a.jpg" },
-      },
-      idolB: {
-        id: "idol-b",
-        name: "アイドルB",
-        group: "グループB",
-        photo: { id: "photo-b", imageUrl: "https://example.com/b.jpg" },
-      },
-    });
+    battleQueueFn.mockResolvedValue([PAIR_AB, PAIR_CD]);
     submitVoteFn.mockResolvedValue({ success: true });
 
     const user = userEvent.setup();
@@ -150,27 +133,22 @@ describe("BattleComponent (投票画面)", () => {
     expect(submitVoteFn).toHaveBeenCalledWith({
       winnerId: "idol-a",
       loserId: "idol-b",
-      winnerPhotoId: "photo-a",
-      loserPhotoId: "photo-b",
+      winnerPhotoId: "photo-idol-a",
+      loserPhotoId: "photo-idol-b",
       sessionId: "test-session-id",
     });
   });
 
   test("10 票投じると /ranking に自動遷移する", async () => {
-    battlePairFn.mockResolvedValue({
-      idolA: {
-        id: "idol-a",
-        name: "アイドルA",
-        group: "グループA",
-        photo: { id: "photo-a", imageUrl: "https://example.com/a.jpg" },
-      },
-      idolB: {
-        id: "idol-b",
-        name: "アイドルB",
-        group: "グループB",
-        photo: { id: "photo-b", imageUrl: "https://example.com/b.jpg" },
-      },
-    });
+    // 10ペア分のキューを用意
+    battleQueueFn.mockResolvedValue(
+      Array.from({ length: 10 }, (_, i) =>
+        makePair(
+          { id: `idol-a-${i}`, name: "アイドルA", group: "グループA" },
+          { id: `idol-b-${i}`, name: "アイドルB", group: "グループB" },
+        ),
+      ),
+    );
     submitVoteFn.mockResolvedValue({ success: true });
 
     const user = userEvent.setup();
@@ -178,7 +156,6 @@ describe("BattleComponent (投票画面)", () => {
 
     for (let i = 0; i < 10; i++) {
       const panelA = await screen.findByRole("button", { name: /グループA アイドルA に投票/ });
-      // パネルが disabled の場合は次フレームを待つ
       await waitFor(() => expect(panelA).not.toBeDisabled());
       await user.click(panelA);
       await waitFor(() => {
@@ -192,20 +169,7 @@ describe("BattleComponent (投票画面)", () => {
   });
 
   test("投票がネットワークエラーになっても画面が壊れず再投票できる", async () => {
-    battlePairFn.mockResolvedValue({
-      idolA: {
-        id: "idol-a",
-        name: "アイドルA",
-        group: "グループA",
-        photo: { id: "photo-a", imageUrl: "https://example.com/a.jpg" },
-      },
-      idolB: {
-        id: "idol-b",
-        name: "アイドルB",
-        group: "グループB",
-        photo: { id: "photo-b", imageUrl: "https://example.com/b.jpg" },
-      },
-    });
+    battleQueueFn.mockResolvedValue([PAIR_AB]);
     submitVoteFn.mockRejectedValueOnce(new Error("offline"));
 
     const user = userEvent.setup();
@@ -228,20 +192,7 @@ describe("BattleComponent (投票画面)", () => {
   });
 
   test("各パネルの画像は object-position: center 25% で表示される", async () => {
-    battlePairFn.mockResolvedValue({
-      idolA: {
-        id: "idol-a",
-        name: "アイドルA",
-        group: "グループA",
-        photo: { id: "photo-a", imageUrl: "https://example.com/a.jpg" },
-      },
-      idolB: {
-        id: "idol-b",
-        name: "アイドルB",
-        group: "グループB",
-        photo: { id: "photo-b", imageUrl: "https://example.com/b.jpg" },
-      },
-    });
+    battleQueueFn.mockResolvedValue([PAIR_AB]);
 
     renderWithProviders(<BattleComponent />);
 
@@ -254,36 +205,8 @@ describe("BattleComponent (投票画面)", () => {
     }
   });
 
-  test("投票後の再取得では表示済みアイドルを excludeIdolIds で渡す", async () => {
-    battlePairFn
-      .mockResolvedValueOnce({
-        idolA: {
-          id: "idol-a",
-          name: "アイドルA",
-          group: "グループA",
-          photo: { id: "photo-a", imageUrl: "https://example.com/a.jpg" },
-        },
-        idolB: {
-          id: "idol-b",
-          name: "アイドルB",
-          group: "グループB",
-          photo: { id: "photo-b", imageUrl: "https://example.com/b.jpg" },
-        },
-      })
-      .mockResolvedValue({
-        idolA: {
-          id: "idol-c",
-          name: "アイドルC",
-          group: "グループC",
-          photo: { id: "photo-c", imageUrl: "https://example.com/c.jpg" },
-        },
-        idolB: {
-          id: "idol-d",
-          name: "アイドルD",
-          group: "グループD",
-          photo: { id: "photo-d", imageUrl: "https://example.com/d.jpg" },
-        },
-      });
+  test("投票後はキューの次のペアが表示される（API 再フェッチなし）", async () => {
+    battleQueueFn.mockResolvedValue([PAIR_AB, PAIR_CD]);
     submitVoteFn.mockResolvedValue({ success: true });
 
     const user = userEvent.setup();
@@ -292,36 +215,19 @@ describe("BattleComponent (投票画面)", () => {
     const panelA = await screen.findByRole("button", { name: /グループA アイドルA に投票/ });
     await user.click(panelA);
 
+    // 投票後に次のペア (C/D) が表示される
     await waitFor(() => {
       expect(
         screen.getByRole("button", { name: /グループC アイドルC に投票/ }),
       ).toBeInTheDocument();
     });
 
-    expect(battlePairCalls[0]).toEqual({
-      sessionId: "test-session-id",
-      excludeIdolIds: [],
-    });
-
-    const secondCall = battlePairCalls.at(-1);
-    expect(secondCall?.excludeIdolIds).toEqual(["idol-a", "idol-b"]);
+    // battleQueue は最初の 1 回しか呼ばれていない
+    expect(battleQueueFn).toHaveBeenCalledTimes(1);
   });
 
   test("成功した投票は画面に表示せず localStorage にのみ保存する (写真を覆わないため)", async () => {
-    battlePairFn.mockResolvedValue({
-      idolA: {
-        id: "idol-a",
-        name: "アイドルA",
-        group: "グループA",
-        photo: { id: "photo-a", imageUrl: "https://example.com/a.jpg" },
-      },
-      idolB: {
-        id: "idol-b",
-        name: "アイドルB",
-        group: "グループB",
-        photo: { id: "photo-b", imageUrl: "https://example.com/b.jpg" },
-      },
-    });
+    battleQueueFn.mockResolvedValue([PAIR_AB, PAIR_CD]);
     submitVoteFn.mockResolvedValue({ success: true });
 
     const user = userEvent.setup();
@@ -333,8 +239,8 @@ describe("BattleComponent (投票画面)", () => {
     await waitFor(() => {
       expect(JSON.parse(window.localStorage.getItem("oshi-vote-history") ?? "[]")).toMatchObject([
         {
-          winner: { id: "idol-a", name: "アイドルA", group: "グループA", photoId: "photo-a" },
-          loser: { id: "idol-b", name: "アイドルB", group: "グループB", photoId: "photo-b" },
+          winner: { id: "idol-a", name: "アイドルA", group: "グループA", photoId: "photo-idol-a" },
+          loser: { id: "idol-b", name: "アイドルB", group: "グループB", photoId: "photo-idol-b" },
         },
       ]);
     });
