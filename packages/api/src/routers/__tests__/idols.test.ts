@@ -71,7 +71,7 @@ describe("idols.battlePair", () => {
     }
   });
 
-  test("除外後に 2 体未満しか残らない場合は NOT_FOUND を投げる", async () => {
+  test("除外後に 2 体未満しか残らない場合は全プールにフォールバックして異なる 2 体を返す", async () => {
     const inserted = await db
       .insert(idols)
       .values([
@@ -88,12 +88,31 @@ describe("idols.battlePair", () => {
 
     const caller = createCaller({ auth: null, session: null, db });
 
-    await expect(
-      caller.battlePair({
-        sessionId: "s1",
-        excludeIdolIds: [inserted[0]!.id],
-      }),
-    ).rejects.toThrow(/Not enough idols/);
+    // 1 体しか残らない除外リストでもフォールバックして 2 体返す
+    const pair = await caller.battlePair({
+      sessionId: "s1",
+      excludeIdolIds: [inserted[0]!.id],
+    });
+
+    expect(pair.idolA.id).not.toBe(pair.idolB.id);
+    const allIds = inserted.map((i) => i.id);
+    expect(allIds).toContain(pair.idolA.id);
+    expect(allIds).toContain(pair.idolB.id);
+  });
+
+  test("全アイドル数が 2 体未満の場合は NOT_FOUND を投げる", async () => {
+    const [inserted] = await db
+      .insert(idols)
+      .values([{ name: "A", group: "G" }])
+      .returning();
+
+    await db
+      .insert(idolPhotos)
+      .values({ idolId: inserted!.id, imageUrl: `https://example.com/${inserted!.id}.jpg` });
+
+    const caller = createCaller({ auth: null, session: null, db });
+
+    await expect(caller.battlePair({ sessionId: "s1" })).rejects.toThrow(/Not enough idols/);
   });
 
   test("excludeIdolIds 未指定でも動作する", async () => {

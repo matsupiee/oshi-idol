@@ -39,26 +39,30 @@ export const idolsRouter = router({
       const db = ctx.db;
       const excludeIds = input.excludeIdolIds ?? [];
 
-      const allIdols = await db.query.idols.findMany({
+      let availableIdols = await db.query.idols.findMany({
         with: { photos: true },
         where: excludeIds.length > 0 ? notInArray(idols.id, excludeIds) : undefined,
       });
 
-      if (allIdols.length < 2) {
+      if (availableIdols.length < 2 && excludeIds.length > 0) {
+        availableIdols = await db.query.idols.findMany({ with: { photos: true } });
+      }
+
+      if (availableIdols.length < 2) {
         throw new TRPCError({
           code: "NOT_FOUND",
           message: "Not enough idols for a battle pair",
         });
       }
 
-      const indexA = Math.floor(Math.random() * allIdols.length);
-      let indexB = Math.floor(Math.random() * (allIdols.length - 1));
+      const indexA = Math.floor(Math.random() * availableIdols.length);
+      let indexB = Math.floor(Math.random() * (availableIdols.length - 1));
       if (indexB >= indexA) {
         indexB += 1;
       }
 
-      const idolA = allIdols[indexA];
-      const idolB = allIdols[indexB];
+      const idolA = availableIdols[indexA];
+      const idolB = availableIdols[indexB];
 
       if (!idolA || !idolB) {
         throw new TRPCError({

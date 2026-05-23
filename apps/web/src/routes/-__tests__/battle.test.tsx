@@ -307,6 +307,133 @@ describe("BattleComponent (投票画面)", () => {
     expect(secondCall?.excludeIdolIds).toEqual(["idol-a", "idol-b"]);
   });
 
+  test("localStorage に保存済みの seen IDs があればマウント時に除外リストに使う", async () => {
+    window.localStorage.setItem(
+      "oshi-seen-idol-ids",
+      JSON.stringify(["idol-prev-a", "idol-prev-b"]),
+    );
+
+    battlePairFn.mockResolvedValue({
+      idolA: {
+        id: "idol-a",
+        name: "アイドルA",
+        group: "グループA",
+        photo: { id: "photo-a", imageUrl: "https://example.com/a.jpg" },
+      },
+      idolB: {
+        id: "idol-b",
+        name: "アイドルB",
+        group: "グループB",
+        photo: { id: "photo-b", imageUrl: "https://example.com/b.jpg" },
+      },
+    });
+
+    renderWithProviders(<BattleComponent />);
+
+    await screen.findByRole("button", { name: /グループA アイドルA に投票/ });
+
+    expect(battlePairCalls[0]).toEqual({
+      sessionId: "test-session-id",
+      excludeIdolIds: ["idol-prev-a", "idol-prev-b"],
+    });
+  });
+
+  test("投票後に seen IDs を localStorage に保存する", async () => {
+    battlePairFn
+      .mockResolvedValueOnce({
+        idolA: {
+          id: "idol-a",
+          name: "アイドルA",
+          group: "グループA",
+          photo: { id: "photo-a", imageUrl: "https://example.com/a.jpg" },
+        },
+        idolB: {
+          id: "idol-b",
+          name: "アイドルB",
+          group: "グループB",
+          photo: { id: "photo-b", imageUrl: "https://example.com/b.jpg" },
+        },
+      })
+      .mockResolvedValue({
+        idolA: {
+          id: "idol-c",
+          name: "アイドルC",
+          group: "グループC",
+          photo: { id: "photo-c", imageUrl: "https://example.com/c.jpg" },
+        },
+        idolB: {
+          id: "idol-d",
+          name: "アイドルD",
+          group: "グループD",
+          photo: { id: "photo-d", imageUrl: "https://example.com/d.jpg" },
+        },
+      });
+    submitVoteFn.mockResolvedValue({ success: true });
+
+    const user = userEvent.setup();
+    renderWithProviders(<BattleComponent />);
+
+    const panelA = await screen.findByRole("button", { name: /グループA アイドルA に投票/ });
+    await user.click(panelA);
+
+    await waitFor(() => {
+      const stored = JSON.parse(window.localStorage.getItem("oshi-seen-idol-ids") ?? "[]");
+      expect(stored).toEqual(["idol-a", "idol-b"]);
+    });
+  });
+
+  test("seen IDs は最大 200 件に保たれ古い分から削除される", async () => {
+    const existingIds = Array.from({ length: 200 }, (_, i) => `idol-existing-${i}`);
+    window.localStorage.setItem("oshi-seen-idol-ids", JSON.stringify(existingIds));
+
+    battlePairFn
+      .mockResolvedValueOnce({
+        idolA: {
+          id: "idol-new-a",
+          name: "新A",
+          group: "グループG",
+          photo: { id: "p-a", imageUrl: "https://example.com/a.jpg" },
+        },
+        idolB: {
+          id: "idol-new-b",
+          name: "新B",
+          group: "グループG",
+          photo: { id: "p-b", imageUrl: "https://example.com/b.jpg" },
+        },
+      })
+      .mockResolvedValue({
+        idolA: {
+          id: "idol-c",
+          name: "アイドルC",
+          group: "グループC",
+          photo: null,
+        },
+        idolB: {
+          id: "idol-d",
+          name: "アイドルD",
+          group: "グループD",
+          photo: null,
+        },
+      });
+    submitVoteFn.mockResolvedValue({ success: true });
+
+    const user = userEvent.setup();
+    renderWithProviders(<BattleComponent />);
+
+    await screen.findByRole("button", { name: /グループG 新A に投票/ });
+    const panelA = screen.getByRole("button", { name: /グループG 新A に投票/ });
+    await user.click(panelA);
+
+    await waitFor(() => {
+      const stored = JSON.parse(window.localStorage.getItem("oshi-seen-idol-ids") ?? "[]");
+      expect(stored).toHaveLength(200);
+      expect(stored.slice(-2)).toEqual(["idol-new-a", "idol-new-b"]);
+      expect(stored).not.toContain("idol-existing-0");
+      expect(stored).not.toContain("idol-existing-1");
+      expect(stored[0]).toBe("idol-existing-2");
+    });
+  });
+
   test("成功した投票は画面に表示せず localStorage にのみ保存する (写真を覆わないため)", async () => {
     battlePairFn.mockResolvedValue({
       idolA: {
