@@ -9,9 +9,9 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as RankingRouteImport } from './routes/ranking'
-import { Route as HistoryRouteImport } from './routes/history'
-import { Route as BattleRouteImport } from './routes/battle'
+import { Route as RankingRouteImport } from './routes/ranking/index.tsx'
+import { Route as HistoryRouteImport } from './routes/history/index.tsx'
+import { Route as BattleRouteImport } from './routes/battle/index.tsx'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ApiTrpcSplatRouteImport } from './routes/api/trpc/$'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
