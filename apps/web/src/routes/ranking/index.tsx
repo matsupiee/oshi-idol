@@ -1,5 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
+import { toPng } from "html-to-image";
 import { ArrowLeft } from "lucide-react";
 import { useRef } from "react";
 
@@ -56,6 +57,26 @@ export function RankingComponent() {
     const tier =
       TIER_CONFIG.find((t) => idol.eloRating >= t.minElo) ?? TIER_CONFIG[TIER_CONFIG.length - 1];
     tierGroups[tier.label].push(idol);
+  }
+
+  async function handleSaveImage() {
+    if (!posterRef.current) return;
+    const dataUrl = await toPng(posterRef.current);
+    const link = document.createElement("a");
+    link.download = "oshi-ranking.png";
+    link.href = dataUrl;
+    link.click();
+  }
+
+  function handleShareX() {
+    const text =
+      "全体推しランキング TOP5\n" +
+      top10
+        .slice(0, 5)
+        .map((idol) => `${idol.rank}位: ${idol.name} (${idol.group})`)
+        .join("\n");
+    const url = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&hashtags=推し活バトル`;
+    window.open(url, "_blank");
   }
 
   return (
@@ -134,6 +155,42 @@ export function RankingComponent() {
 
       {/* CTAs */}
       <div className="flex flex-col gap-3 px-4 pb-10">
+        <button
+          type="button"
+          onClick={handleShareX}
+          style={{
+            height: 56,
+            border: "none",
+            cursor: "pointer",
+            background: "linear-gradient(180deg, #ff2e88 0%, #9d4dff 100%)",
+            color: "#0a0418",
+            fontFamily: '"Bungee", monospace',
+            fontSize: 16,
+            letterSpacing: "0.12em",
+            borderRadius: 4,
+            boxShadow: "0 0 20px #ff2e8899, 0 4px 0 #000",
+          }}
+        >
+          ↗ X でシェア
+        </button>
+        <button
+          type="button"
+          onClick={handleSaveImage}
+          style={{
+            height: 48,
+            cursor: "pointer",
+            background: "transparent",
+            color: "#fff",
+            border: "1px solid #9d4dff",
+            fontFamily: '"Bungee", monospace',
+            fontSize: 13,
+            letterSpacing: "0.16em",
+            borderRadius: 4,
+            boxShadow: "inset 0 0 12px #9d4dff33",
+          }}
+        >
+          ↓ 画像を保存
+        </button>
         <button
           type="button"
           onClick={() => navigate({ to: "/" })}
