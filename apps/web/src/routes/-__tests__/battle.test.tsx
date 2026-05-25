@@ -13,10 +13,6 @@ vi.mock("@tanstack/react-router", async (importOriginal) => {
   };
 });
 
-vi.mock("@/lib/session", () => ({
-  getSessionId: () => "test-session-id",
-}));
-
 interface BattleIdol {
   id: string;
   name: string;
@@ -117,7 +113,7 @@ describe("BattleComponent (投票画面)", () => {
     expect(screen.queryByText("グループA")).not.toBeInTheDocument();
   });
 
-  test("パネルをタップすると勝者・敗者・セッションIDを渡して投票が送信される", async () => {
+  test("パネルをタップすると勝者・敗者を渡して投票が送信される", async () => {
     battleQueueFn.mockResolvedValue([PAIR_AB, PAIR_CD]);
     submitVoteFn.mockResolvedValue({ success: true });
 
@@ -135,7 +131,6 @@ describe("BattleComponent (投票画面)", () => {
       loserId: "idol-b",
       winnerPhotoId: "photo-idol-a",
       loserPhotoId: "photo-idol-b",
-      sessionId: "test-session-id",
     });
   });
 

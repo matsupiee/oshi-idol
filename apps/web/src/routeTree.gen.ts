@@ -9,31 +9,31 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as RankingRouteImport } from './routes/ranking/index.tsx'
-import { Route as HistoryRouteImport } from './routes/history/index.tsx'
-import { Route as BattleRouteImport } from './routes/battle/index.tsx'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as RankingIndexRouteImport } from './routes/ranking/index'
+import { Route as HistoryIndexRouteImport } from './routes/history/index'
+import { Route as BattleIndexRouteImport } from './routes/battle/index'
 import { Route as ApiTrpcSplatRouteImport } from './routes/api/trpc/$'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
 
-const RankingRoute = RankingRouteImport.update({
-  id: '/ranking',
-  path: '/ranking',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const HistoryRoute = HistoryRouteImport.update({
-  id: '/history',
-  path: '/history',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const BattleRoute = BattleRouteImport.update({
-  id: '/battle',
-  path: '/battle',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RankingIndexRoute = RankingIndexRouteImport.update({
+  id: '/ranking/',
+  path: '/ranking/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const HistoryIndexRoute = HistoryIndexRouteImport.update({
+  id: '/history/',
+  path: '/history/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BattleIndexRoute = BattleIndexRouteImport.update({
+  id: '/battle/',
+  path: '/battle/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiTrpcSplatRoute = ApiTrpcSplatRouteImport.update({
@@ -49,26 +49,26 @@ const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/battle': typeof BattleRoute
-  '/history': typeof HistoryRoute
-  '/ranking': typeof RankingRoute
+  '/battle/': typeof BattleIndexRoute
+  '/history/': typeof HistoryIndexRoute
+  '/ranking/': typeof RankingIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/trpc/$': typeof ApiTrpcSplatRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/battle': typeof BattleRoute
-  '/history': typeof HistoryRoute
-  '/ranking': typeof RankingRoute
+  '/battle': typeof BattleIndexRoute
+  '/history': typeof HistoryIndexRoute
+  '/ranking': typeof RankingIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/trpc/$': typeof ApiTrpcSplatRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
-  '/battle': typeof BattleRoute
-  '/history': typeof HistoryRoute
-  '/ranking': typeof RankingRoute
+  '/battle/': typeof BattleIndexRoute
+  '/history/': typeof HistoryIndexRoute
+  '/ranking/': typeof RankingIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/trpc/$': typeof ApiTrpcSplatRoute
 }
@@ -76,9 +76,9 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
-    | '/battle'
-    | '/history'
-    | '/ranking'
+    | '/battle/'
+    | '/history/'
+    | '/ranking/'
     | '/api/auth/$'
     | '/api/trpc/$'
   fileRoutesByTo: FileRoutesByTo
@@ -86,50 +86,50 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
-    | '/battle'
-    | '/history'
-    | '/ranking'
+    | '/battle/'
+    | '/history/'
+    | '/ranking/'
     | '/api/auth/$'
     | '/api/trpc/$'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  BattleRoute: typeof BattleRoute
-  HistoryRoute: typeof HistoryRoute
-  RankingRoute: typeof RankingRoute
+  BattleIndexRoute: typeof BattleIndexRoute
+  HistoryIndexRoute: typeof HistoryIndexRoute
+  RankingIndexRoute: typeof RankingIndexRoute
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
   ApiTrpcSplatRoute: typeof ApiTrpcSplatRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/ranking': {
-      id: '/ranking'
-      path: '/ranking'
-      fullPath: '/ranking'
-      preLoaderRoute: typeof RankingRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/history': {
-      id: '/history'
-      path: '/history'
-      fullPath: '/history'
-      preLoaderRoute: typeof HistoryRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/battle': {
-      id: '/battle'
-      path: '/battle'
-      fullPath: '/battle'
-      preLoaderRoute: typeof BattleRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/': {
       id: '/'
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/ranking/': {
+      id: '/ranking/'
+      path: '/ranking'
+      fullPath: '/ranking/'
+      preLoaderRoute: typeof RankingIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/history/': {
+      id: '/history/'
+      path: '/history'
+      fullPath: '/history/'
+      preLoaderRoute: typeof HistoryIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/battle/': {
+      id: '/battle/'
+      path: '/battle'
+      fullPath: '/battle/'
+      preLoaderRoute: typeof BattleIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/trpc/$': {
@@ -151,9 +151,9 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  BattleRoute: BattleRoute,
-  HistoryRoute: HistoryRoute,
-  RankingRoute: RankingRoute,
+  BattleIndexRoute: BattleIndexRoute,
+  HistoryIndexRoute: HistoryIndexRoute,
+  RankingIndexRoute: RankingIndexRoute,
   ApiAuthSplatRoute: ApiAuthSplatRoute,
   ApiTrpcSplatRoute: ApiTrpcSplatRoute,
 }

@@ -3,22 +3,21 @@ import { idols, votes } from "@oshi-idol/db/schema/idols";
 import { eq } from "drizzle-orm";
 import { z } from "zod";
 
-import { publicProcedure, router } from "../index";
+import { protectedProcedure, router } from "../index";
 import { calculateBattleResult } from "../lib/elo";
 
 export const votesRouter = router({
-  submit: publicProcedure
+  submit: protectedProcedure
     .input(
       z.object({
         winnerId: z.string(),
         loserId: z.string(),
         winnerPhotoId: z.string(),
         loserPhotoId: z.string(),
-        sessionId: z.string(),
       }),
     )
     .mutation(async ({ input, ctx }) => {
-      const { db } = ctx;
+      const { db, session } = ctx;
 
       const winner = await db.query.idols.findFirst({
         where: eq(idols.id, input.winnerId),
@@ -46,7 +45,7 @@ export const votesRouter = router({
           loserId: input.loserId,
           winnerPhotoId: input.winnerPhotoId,
           loserPhotoId: input.loserPhotoId,
-          sessionId: input.sessionId,
+          userId: session.user.id,
           ipAddress: ctx.ipAddress,
         }),
         db

@@ -11,7 +11,7 @@ import { SharePoster } from "./_components/share-poster";
 import { StatsGrid } from "./_components/stats-grid";
 import { TierRow } from "./_components/tier-row";
 
-export const Route = createFileRoute("/ranking")({
+export const Route = createFileRoute("/ranking/")({
   component: RankingComponent,
 });
 
