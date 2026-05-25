@@ -45,7 +45,7 @@ function RootDocument() {
 
   useEffect(() => {
     if (!session.isPending && !session.data) {
-      authClient.signIn.anonymous();
+      authClient.signIn.anonymous().catch(console.error);
     }
   }, [session.isPending, session.data]);
 
