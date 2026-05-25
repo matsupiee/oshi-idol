@@ -14,6 +14,7 @@ export const votes = sqliteTable("votes", {
   winnerPhotoId: text("winner_photo_id").references(() => idolPhotos.id),
   loserPhotoId: text("loser_photo_id").references(() => idolPhotos.id),
   sessionId: text("session_id").notNull(),
+  ipAddress: text("ip_address"),
   createdAt: integer("created_at", { mode: "timestamp_ms" })
     .default(sql`(cast(unixepoch('subsecond') * 1000 as integer))`)
     .notNull(),
