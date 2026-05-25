@@ -30,7 +30,7 @@ describe("idols.battleQueue", () => {
     }
 
     const caller = createCaller({ auth: null, session: null, db });
-    const pairs = await caller.battleQueue({ sessionId: "s1", count: 3 });
+    const pairs = await caller.battleQueue({ count: 3 });
 
     expect(pairs).toHaveLength(3);
   });
@@ -48,7 +48,7 @@ describe("idols.battleQueue", () => {
     }
 
     const caller = createCaller({ auth: null, session: null, db });
-    const pairs = await caller.battleQueue({ sessionId: "s1", count: 3 });
+    const pairs = await caller.battleQueue({ count: 3 });
 
     for (const pair of pairs) {
       expect(pair.idolA.id).not.toBe(pair.idolB.id);
@@ -68,7 +68,7 @@ describe("idols.battleQueue", () => {
     }
 
     const caller = createCaller({ auth: null, session: null, db });
-    const pairs = await caller.battleQueue({ sessionId: "s1", count: 5 });
+    const pairs = await caller.battleQueue({ count: 5 });
 
     const seenIds = new Set<string>();
     for (const pair of pairs) {
@@ -98,7 +98,7 @@ describe("idols.battleQueue", () => {
 
     const excluded = [inserted[0]!.id, inserted[1]!.id];
     const caller = createCaller({ auth: null, session: null, db });
-    const pairs = await caller.battleQueue({ sessionId: "s1", excludeIdolIds: excluded, count: 1 });
+    const pairs = await caller.battleQueue({ excludeIdolIds: excluded, count: 1 });
 
     expect(pairs).toHaveLength(1);
     expect(excluded).not.toContain(pairs[0]!.idolA.id);
@@ -117,9 +117,7 @@ describe("idols.battleQueue", () => {
 
     const caller = createCaller({ auth: null, session: null, db });
 
-    await expect(caller.battleQueue({ sessionId: "s1", count: 1 })).rejects.toThrow(
-      /Not enough idols/,
-    );
+    await expect(caller.battleQueue({ count: 1 })).rejects.toThrow(/Not enough idols/);
   });
 
   test("アイドルが足りない場合は取得できる件数だけ返す", async () => {
@@ -139,7 +137,7 @@ describe("idols.battleQueue", () => {
 
     const caller = createCaller({ auth: null, session: null, db });
     // 2人しかいないので count=10 を要求しても 1 ペアしか返せない
-    const pairs = await caller.battleQueue({ sessionId: "s1", count: 10 });
+    const pairs = await caller.battleQueue({ count: 10 });
 
     expect(pairs).toHaveLength(1);
   });
@@ -162,7 +160,6 @@ describe("idols.battleQueue", () => {
     const caller = createCaller({ auth: null, session: null, db });
     // 1 体しか残らない除外リストでもフォールバックして 2 体のペアを返す
     const pairs = await caller.battleQueue({
-      sessionId: "s1",
       excludeIdolIds: [inserted[0]!.id],
       count: 1,
     });

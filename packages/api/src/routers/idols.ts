@@ -31,7 +31,6 @@ export const idolsRouter = router({
   battleQueue: publicProcedure
     .input(
       z.object({
-        sessionId: z.string(),
         excludeIdolIds: z.array(z.string()).optional(),
         count: z.number().min(1).max(20).default(20),
       }),
