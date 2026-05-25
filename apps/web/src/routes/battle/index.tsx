@@ -5,6 +5,8 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { getSessionId } from "@/lib/session";
 import { addVoteHistoryEntry } from "@/lib/vote-history";
 import { useTRPC } from "@/utils/trpc";
+import { BattlePanel, type IdolData } from "./_components/battle-panel";
+import { HeartBurst } from "./_components/heart-burst";
 
 export const Route = createFileRoute("/battle")({
   component: BattleComponent,
@@ -17,13 +19,6 @@ interface Burst {
   id: number;
   x: number;
   y: number;
-}
-
-interface IdolData {
-  id: string;
-  name: string;
-  group: string;
-  photo: { id: string; imageUrl: string } | { id: null; imageUrl: null } | null;
 }
 
 interface BattlePair {
@@ -252,161 +247,6 @@ export function BattleComponent() {
 
       {/* CRT scanlines */}
       <div className="arcade-scanlines" />
-    </div>
-  );
-}
-
-// ── BattlePanel ──────────────────────────────────────────────────
-
-interface BattlePanelProps {
-  idol: IdolData;
-  position: "top" | "bottom";
-  state: "idle" | "win" | "lose";
-  onTap: (e: React.MouseEvent<HTMLButtonElement>) => void;
-  disabled: boolean;
-}
-
-function BattlePanel({ idol, position, state, onTap, disabled }: BattlePanelProps) {
-  const animClass =
-    state === "win" ? "animate-panel-win" : state === "lose" ? "animate-panel-lose" : "";
-
-  const clipPath =
-    position === "top"
-      ? "polygon(0 0, 100% 0, 100% 88%, 0 100%)"
-      : "polygon(0 12%, 100% 0, 100% 100%, 0 100%)";
-
-  const positionClass =
-    position === "top"
-      ? "absolute top-0 left-0 right-0 h-[52%]"
-      : "absolute bottom-0 left-0 right-0 h-[52%]";
-
-  return (
-    <button
-      type="button"
-      onClick={onTap}
-      disabled={disabled}
-      aria-label={`${idol.group} ${idol.name} に投票`}
-      className={`${positionClass} cursor-pointer overflow-hidden border-none bg-transparent p-0 ${animClass}`}
-      style={{
-        clipPath,
-        transformOrigin: position === "top" ? "50% 30%" : "50% 70%",
-      }}
-    >
-      {/* Portrait */}
-      <div className="absolute inset-0">
-        {idol.photo?.imageUrl ? (
-          <img
-            src={idol.photo.imageUrl}
-            alt={idol.name}
-            className="h-[120%] w-[120%] object-cover"
-            style={{ objectPosition: "center 30%" }}
-            fetchPriority="high"
-          />
-        ) : (
-          <div
-            className="flex h-full w-full items-center justify-center"
-            style={{
-              background:
-                position === "top"
-                  ? "linear-gradient(135deg, #ff2e88 0%, #9d4dff 100%)"
-                  : "linear-gradient(135deg, #9d4dff 0%, #00f0ff 100%)",
-            }}
-          >
-            <span style={{ fontSize: 80, opacity: 0.2, color: "#fff" }}>♪</span>
-          </div>
-        )}
-      </div>
-
-      {/* Dark fade from cut edge */}
-      <div
-        className="pointer-events-none absolute inset-0"
-        style={{
-          background:
-            position === "top"
-              ? "linear-gradient(180deg, transparent 40%, rgba(10,4,24,0.2) 100%)"
-              : "linear-gradient(0deg, transparent 40%, rgba(10,4,24,0.2) 100%)",
-        }}
-      />
-
-      {/* Inner glow from cut */}
-      <div
-        className="pointer-events-none absolute inset-0"
-        style={{
-          boxShadow: position === "top" ? "inset 0 0 60px #ff2e8844" : "inset 0 0 60px #9d4dff44",
-        }}
-      />
-    </button>
-  );
-}
-
-// ── HeartBurst ──────────────────────────────────────────────────
-
-interface HeartBurstProps {
-  x: number;
-  y: number;
-  onDone: () => void;
-}
-
-function HeartBurst({ x, y, onDone }: HeartBurstProps) {
-  const [alive, setAlive] = useState(true);
-  const onDoneRef = useRef(onDone);
-  onDoneRef.current = onDone;
-
-  useEffect(() => {
-    const t = setTimeout(() => {
-      setAlive(false);
-      onDoneRef.current();
-    }, 900);
-    return () => clearTimeout(t);
-  }, []); // マウント時のみ — onDoneRef 経由で最新コールバックを呼ぶ
-
-  if (!alive) return null;
-
-  const N = 12;
-  const particles = Array.from({ length: N }, (_, i) => {
-    const ang = (i / N) * Math.PI * 2;
-    const dist = 80 + Math.random() * 80;
-    const rot = Math.random() * 360;
-    const delay = Math.random() * 0.05;
-    return {
-      i,
-      dx: Math.cos(ang) * dist,
-      dy: Math.sin(ang) * dist - 20,
-      rot,
-      delay,
-    };
-  });
-
-  return (
-    <div
-      className="pointer-events-none absolute z-[90]"
-      style={{
-        left: `${x}%`,
-        top: `${y}%`,
-        transform: "translate(-50%, -50%)",
-      }}
-    >
-      {particles.map((p) => (
-        <div
-          key={p.i}
-          className="absolute left-0 top-0"
-          style={{
-            fontSize: 24,
-            color: "#ff2e88",
-            textShadow: "0 0 8px #ff2e88, 0 0 16px #ff2e88aa",
-            animation: `fx-heart-${p.i} 0.9s cubic-bezier(.16,.84,.34,1.01) ${p.delay}s forwards`,
-          }}
-        >
-          ♥
-          <style>{`
-            @keyframes fx-heart-${p.i} {
-              0% { transform: translate(0,0) scale(0.4) rotate(${p.rot}deg); opacity: 0; }
-              15% { opacity: 1; }
-              100% { transform: translate(${p.dx}px, ${p.dy}px) scale(1.2) rotate(${p.rot + 180}deg); opacity: 0; }
-            }
-          `}</style>
-        </div>
-      ))}
     </div>
   );
 }
