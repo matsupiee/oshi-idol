@@ -5,7 +5,9 @@ import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { HeadContent, Outlet, Scripts, createRootRouteWithContext } from "@tanstack/react-router";
 import { TanStackRouterDevtools } from "@tanstack/react-router-devtools";
 import type { TRPCOptionsProxy } from "@trpc/tanstack-react-query";
+import { useEffect } from "react";
 
+import { authClient } from "@/lib/auth-client";
 import appCss from "../index.css?url";
 
 export interface RouterAppContext {
@@ -39,6 +41,14 @@ export const Route = createRootRouteWithContext<RouterAppContext>()({
 });
 
 function RootDocument() {
+  const session = authClient.useSession();
+
+  useEffect(() => {
+    if (!session.isPending && !session.data) {
+      authClient.signIn.anonymous();
+    }
+  }, [session.isPending, session.data]);
+
   return (
     <html lang="ja" className="dark">
       <head>
