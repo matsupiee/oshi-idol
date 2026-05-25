@@ -2,7 +2,8 @@ import { beforeEach, describe, expect, test } from "vitest";
 
 import type { TestDb } from "@oshi-idol/db/test";
 import { getTestDb, runMigrations } from "@oshi-idol/db/test";
-import { idolPhotos, idols } from "@oshi-idol/db/schema/idols";
+import { idolPhotos, idols, votes } from "@oshi-idol/db/schema/idols";
+import { user } from "@oshi-idol/db/schema/auth";
 import { eq } from "drizzle-orm";
 
 import { t } from "../../index";
@@ -18,7 +19,18 @@ describe("votes.submit", () => {
     await runMigrations(db);
   });
 
-  test("投票を送信するとレーティングが更新され投票レコードが作成される", async () => {
+  test("session があれば投票を送信するとレーティングが更新され投票レコードが作成される", async () => {
+    const [testUser] = await db
+      .insert(user)
+      .values({
+        id: "test-user-id",
+        name: "匿名ユーザー",
+        email: "anon@test.com",
+        emailVerified: false,
+        isAnonymous: true,
+      })
+      .returning();
+
     const [winner] = await db
       .insert(idols)
       .values({ name: "アイドルA", group: "グループA", eloRating: 1500, wins: 0, losses: 0 })
@@ -39,14 +51,27 @@ describe("votes.submit", () => {
       .values({ idolId: loser!.id, imageUrl: "https://example.com/b.jpg" })
       .returning();
 
-    const caller = createCaller({ auth: null, session: null, db });
+    const mockSession = {
+      session: {
+        id: "test-session-id",
+        userId: testUser!.id,
+        expiresAt: new Date(Date.now() + 86400000),
+        token: "test-token",
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        ipAddress: null,
+        userAgent: null,
+      },
+      user: testUser!,
+    };
+
+    const caller = createCaller({ auth: null, session: mockSession, db });
 
     const result = await caller.submit({
       winnerId: winner!.id,
       loserId: loser!.id,
       winnerPhotoId: winnerPhoto!.id,
       loserPhotoId: loserPhoto!.id,
-      sessionId: "test-session",
     });
 
     expect(result).toEqual({ success: true });
@@ -62,10 +87,54 @@ describe("votes.submit", () => {
     });
     expect(updatedLoser!.losses).toBe(1);
     expect(updatedLoser!.eloRating).toBeLessThan(1400);
+
+    const voteRecord = await db.query.votes.findFirst({
+      where: eq(votes.userId, testUser!.id),
+    });
+    expect(voteRecord).toBeDefined();
+    expect(voteRecord!.userId).toBe(testUser!.id);
+  });
+
+  test("session がない場合は UNAUTHORIZED エラーになる", async () => {
+    const caller = createCaller({ auth: null, session: null, db });
+
+    await expect(
+      caller.submit({
+        winnerId: "some-id",
+        loserId: "other-id",
+        winnerPhotoId: "photo-id",
+        loserPhotoId: "photo-id",
+      }),
+    ).rejects.toThrow("Authentication required");
   });
 
   test("winner が見つからない場合は NOT_FOUND エラーになる", async () => {
-    const caller = createCaller({ auth: null, session: null, db });
+    const [testUser] = await db
+      .insert(user)
+      .values({
+        id: "test-user-id-2",
+        name: "匿名ユーザー",
+        email: "anon2@test.com",
+        emailVerified: false,
+        isAnonymous: true,
+      })
+      .returning();
+
+    const mockSession = {
+      session: {
+        id: "test-session-id-2",
+        userId: testUser!.id,
+        expiresAt: new Date(Date.now() + 86400000),
+        token: "test-token-2",
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        ipAddress: null,
+        userAgent: null,
+      },
+      user: testUser!,
+    };
+
+    const caller = createCaller({ auth: null, session: mockSession, db });
 
     await expect(
       caller.submit({
@@ -73,7 +142,6 @@ describe("votes.submit", () => {
         loserId: "another-id",
         winnerPhotoId: "photo-id",
         loserPhotoId: "photo-id",
-        sessionId: "test-session",
       }),
     ).rejects.toThrow("Winner not found");
   });
