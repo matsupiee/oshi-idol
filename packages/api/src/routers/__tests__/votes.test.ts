@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, test } from "vitest";
 
 import type { TestDb } from "@oshi-idol/db/test";
 import { getTestDb, runMigrations } from "@oshi-idol/db/test";
-import { idolPhotos, idols } from "@oshi-idol/db/schema/idols";
+import { idolPhotos, idols, votes } from "@oshi-idol/db/schema/idols";
 import { eq } from "drizzle-orm";
 
 import { t } from "../../index";
@@ -39,7 +39,7 @@ describe("votes.submit", () => {
       .values({ idolId: loser!.id, imageUrl: "https://example.com/b.jpg" })
       .returning();
 
-    const caller = createCaller({ auth: null, session: null, db });
+    const caller = createCaller({ auth: null, session: null, db, ipAddress: null });
 
     const result = await caller.submit({
       winnerId: winner!.id,
@@ -64,8 +64,44 @@ describe("votes.submit", () => {
     expect(updatedLoser!.eloRating).toBeLessThan(1400);
   });
 
+  test("投票を送信するとIPアドレスが記録される", async () => {
+    const [winner] = await db
+      .insert(idols)
+      .values({ name: "アイドルC", group: "グループC", eloRating: 1500, wins: 0, losses: 0 })
+      .returning();
+
+    const [loser] = await db
+      .insert(idols)
+      .values({ name: "アイドルD", group: "グループD", eloRating: 1400, wins: 0, losses: 0 })
+      .returning();
+
+    const [winnerPhoto] = await db
+      .insert(idolPhotos)
+      .values({ idolId: winner!.id, imageUrl: "https://example.com/c.jpg" })
+      .returning();
+
+    const [loserPhoto] = await db
+      .insert(idolPhotos)
+      .values({ idolId: loser!.id, imageUrl: "https://example.com/d.jpg" })
+      .returning();
+
+    const caller = createCaller({ auth: null, session: null, db, ipAddress: "203.0.113.1" });
+
+    await caller.submit({
+      winnerId: winner!.id,
+      loserId: loser!.id,
+      winnerPhotoId: winnerPhoto!.id,
+      loserPhotoId: loserPhoto!.id,
+      sessionId: "test-session-ip",
+    });
+
+    const [vote] = await db.select().from(votes).where(eq(votes.sessionId, "test-session-ip"));
+
+    expect(vote!.ipAddress).toBe("203.0.113.1");
+  });
+
   test("winner が見つからない場合は NOT_FOUND エラーになる", async () => {
-    const caller = createCaller({ auth: null, session: null, db });
+    const caller = createCaller({ auth: null, session: null, db, ipAddress: null });
 
     await expect(
       caller.submit({

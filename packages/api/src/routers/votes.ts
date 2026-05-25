@@ -47,6 +47,7 @@ export const votesRouter = router({
           winnerPhotoId: input.winnerPhotoId,
           loserPhotoId: input.loserPhotoId,
           sessionId: input.sessionId,
+          ipAddress: ctx.ipAddress,
         }),
         db
           .update(idols)
