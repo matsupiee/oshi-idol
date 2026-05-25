@@ -6,6 +6,7 @@ CREATE TABLE `__new_votes` (
 	`winner_photo_id` text NOT NULL,
 	`loser_photo_id` text NOT NULL,
 	`user_id` text NOT NULL,
+	`ip_address` text,
 	`created_at` integer DEFAULT (cast(unixepoch('subsecond') * 1000 as integer)) NOT NULL,
 	`updated_at` integer DEFAULT (cast(unixepoch('subsecond') * 1000 as integer)) NOT NULL,
 	FOREIGN KEY (`winner_id`) REFERENCES `idols`(`id`) ON UPDATE no action ON DELETE no action,
@@ -15,7 +16,7 @@ CREATE TABLE `__new_votes` (
 	FOREIGN KEY (`user_id`) REFERENCES `user`(`id`) ON UPDATE no action ON DELETE no action
 );
 --> statement-breakpoint
-INSERT INTO `__new_votes`("id", "winner_id", "loser_id", "winner_photo_id", "loser_photo_id", "user_id", "created_at", "updated_at") SELECT "id", "winner_id", "loser_id", "winner_photo_id", "loser_photo_id", "user_id", "created_at", "updated_at" FROM `votes`;--> statement-breakpoint
+INSERT INTO `__new_votes`("id", "winner_id", "loser_id", "winner_photo_id", "loser_photo_id", "user_id", "ip_address", "created_at", "updated_at") SELECT "id", "winner_id", "loser_id", "winner_photo_id", "loser_photo_id", "user_id", "ip_address", "created_at", "updated_at" FROM `votes`;--> statement-breakpoint
 DROP TABLE `votes`;--> statement-breakpoint
 ALTER TABLE `__new_votes` RENAME TO `votes`;--> statement-breakpoint
 PRAGMA foreign_keys=ON;--> statement-breakpoint

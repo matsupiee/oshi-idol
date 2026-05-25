@@ -65,7 +65,7 @@ describe("votes.submit", () => {
       user: testUser!,
     };
 
-    const caller = createCaller({ auth: null, session: mockSession, db });
+    const caller = createCaller({ auth: null, session: mockSession, db, ipAddress: null });
 
     const result = await caller.submit({
       winnerId: winner!.id,
@@ -96,7 +96,7 @@ describe("votes.submit", () => {
   });
 
   test("session がない場合は UNAUTHORIZED エラーになる", async () => {
-    const caller = createCaller({ auth: null, session: null, db });
+    const caller = createCaller({ auth: null, session: null, db, ipAddress: null });
 
     await expect(
       caller.submit({
@@ -106,6 +106,66 @@ describe("votes.submit", () => {
         loserPhotoId: "photo-id",
       }),
     ).rejects.toThrow("Authentication required");
+  });
+
+  test("投票を送信するとIPアドレスが記録される", async () => {
+    const [testUser] = await db
+      .insert(user)
+      .values({
+        id: "test-user-id-ip",
+        name: "匿名ユーザー",
+        email: "anon-ip@test.com",
+        emailVerified: false,
+        isAnonymous: true,
+      })
+      .returning();
+
+    const [winner] = await db
+      .insert(idols)
+      .values({ name: "アイドルC", group: "グループC", eloRating: 1500, wins: 0, losses: 0 })
+      .returning();
+
+    const [loser] = await db
+      .insert(idols)
+      .values({ name: "アイドルD", group: "グループD", eloRating: 1400, wins: 0, losses: 0 })
+      .returning();
+
+    const [winnerPhoto] = await db
+      .insert(idolPhotos)
+      .values({ idolId: winner!.id, imageUrl: "https://example.com/c.jpg" })
+      .returning();
+
+    const [loserPhoto] = await db
+      .insert(idolPhotos)
+      .values({ idolId: loser!.id, imageUrl: "https://example.com/d.jpg" })
+      .returning();
+
+    const mockSession = {
+      session: {
+        id: "test-session-id-ip",
+        userId: testUser!.id,
+        expiresAt: new Date(Date.now() + 86400000),
+        token: "test-token-ip",
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        ipAddress: null,
+        userAgent: null,
+      },
+      user: testUser!,
+    };
+
+    const caller = createCaller({ auth: null, session: mockSession, db, ipAddress: "203.0.113.1" });
+
+    await caller.submit({
+      winnerId: winner!.id,
+      loserId: loser!.id,
+      winnerPhotoId: winnerPhoto!.id,
+      loserPhotoId: loserPhoto!.id,
+    });
+
+    const [vote] = await db.select().from(votes).where(eq(votes.userId, testUser!.id));
+
+    expect(vote!.ipAddress).toBe("203.0.113.1");
   });
 
   test("winner が見つからない場合は NOT_FOUND エラーになる", async () => {
@@ -134,7 +194,7 @@ describe("votes.submit", () => {
       user: testUser!,
     };
 
-    const caller = createCaller({ auth: null, session: mockSession, db });
+    const caller = createCaller({ auth: null, session: mockSession, db, ipAddress: null });
 
     await expect(
       caller.submit({

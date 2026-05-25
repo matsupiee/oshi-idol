@@ -29,7 +29,7 @@ describe("idols.battleQueue", () => {
         .values({ idolId: idol.id, imageUrl: `https://example.com/${idol.id}.jpg` });
     }
 
-    const caller = createCaller({ auth: null, session: null, db });
+    const caller = createCaller({ auth: null, session: null, db, ipAddress: null });
     const pairs = await caller.battleQueue({ count: 3 });
 
     expect(pairs).toHaveLength(3);
@@ -47,7 +47,7 @@ describe("idols.battleQueue", () => {
         .values({ idolId: idol.id, imageUrl: `https://example.com/${idol.id}.jpg` });
     }
 
-    const caller = createCaller({ auth: null, session: null, db });
+    const caller = createCaller({ auth: null, session: null, db, ipAddress: null });
     const pairs = await caller.battleQueue({ count: 3 });
 
     for (const pair of pairs) {
@@ -67,7 +67,7 @@ describe("idols.battleQueue", () => {
         .values({ idolId: idol.id, imageUrl: `https://example.com/${idol.id}.jpg` });
     }
 
-    const caller = createCaller({ auth: null, session: null, db });
+    const caller = createCaller({ auth: null, session: null, db, ipAddress: null });
     const pairs = await caller.battleQueue({ count: 5 });
 
     const seenIds = new Set<string>();
@@ -97,7 +97,7 @@ describe("idols.battleQueue", () => {
     }
 
     const excluded = [inserted[0]!.id, inserted[1]!.id];
-    const caller = createCaller({ auth: null, session: null, db });
+    const caller = createCaller({ auth: null, session: null, db, ipAddress: null });
     const pairs = await caller.battleQueue({ excludeIdolIds: excluded, count: 1 });
 
     expect(pairs).toHaveLength(1);
@@ -115,7 +115,7 @@ describe("idols.battleQueue", () => {
       .insert(idolPhotos)
       .values({ idolId: idol!.id, imageUrl: `https://example.com/${idol!.id}.jpg` });
 
-    const caller = createCaller({ auth: null, session: null, db });
+    const caller = createCaller({ auth: null, session: null, db, ipAddress: null });
 
     await expect(caller.battleQueue({ count: 1 })).rejects.toThrow(/Not enough idols/);
   });
@@ -135,7 +135,7 @@ describe("idols.battleQueue", () => {
         .values({ idolId: idol.id, imageUrl: `https://example.com/${idol.id}.jpg` });
     }
 
-    const caller = createCaller({ auth: null, session: null, db });
+    const caller = createCaller({ auth: null, session: null, db, ipAddress: null });
     // 2人しかいないので count=10 を要求しても 1 ペアしか返せない
     const pairs = await caller.battleQueue({ count: 10 });
 
@@ -157,7 +157,7 @@ describe("idols.battleQueue", () => {
         .values({ idolId: idol.id, imageUrl: `https://example.com/${idol.id}.jpg` });
     }
 
-    const caller = createCaller({ auth: null, session: null, db });
+    const caller = createCaller({ auth: null, session: null, db, ipAddress: null });
     // 1 体しか残らない除外リストでもフォールバックして 2 体のペアを返す
     const pairs = await caller.battleQueue({
       excludeIdolIds: [inserted[0]!.id],
