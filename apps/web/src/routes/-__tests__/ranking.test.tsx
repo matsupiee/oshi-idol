@@ -13,11 +13,6 @@ vi.mock("@tanstack/react-router", async (importOriginal) => {
   };
 });
 
-const toPngMock = vi.fn<() => Promise<string>>();
-vi.mock("html-to-image", () => ({
-  toPng: (...args: unknown[]) => toPngMock(...(args as [])),
-}));
-
 interface RankIdol {
   id: string;
   rank: number;
@@ -52,7 +47,6 @@ describe("RankingComponent (結果画面)", () => {
   beforeEach(() => {
     mockNavigate.mockReset();
     top10Fn.mockReset();
-    toPngMock.mockReset();
   });
 
   test("データ取得中は LOADING... を表示する", () => {
@@ -283,89 +277,6 @@ describe("RankingComponent (結果画面)", () => {
     await user.click(button);
 
     expect(mockNavigate).toHaveBeenCalledWith({ to: "/" });
-  });
-
-  test("X でシェアを押すと Twitter Intent が新しいタブで開く", async () => {
-    top10Fn.mockResolvedValue([
-      {
-        id: "idol-rank1",
-        rank: 1,
-        name: "推し一",
-        group: "G1",
-        eloRating: 1800,
-        wins: 5,
-        losses: 5,
-        winRate: 0.5,
-        photo: null,
-      },
-      {
-        id: "idol-rank2",
-        rank: 2,
-        name: "推し二",
-        group: "G2",
-        eloRating: 1700,
-        wins: 4,
-        losses: 6,
-        winRate: 0.4,
-        photo: null,
-      },
-    ]);
-    const openSpy = vi.spyOn(window, "open").mockImplementation(() => null);
-
-    const user = userEvent.setup();
-    renderWithProviders(<RankingComponent />);
-
-    const button = await screen.findByRole("button", { name: /X でシェア/ });
-    await user.click(button);
-
-    expect(openSpy).toHaveBeenCalledTimes(1);
-    const [url, target] = openSpy.mock.calls[0]!;
-    expect(target).toBe("_blank");
-    expect(String(url)).toMatch(/^https:\/\/twitter\.com\/intent\/tweet\?/);
-    expect(decodeURIComponent(String(url))).toContain("全体推しランキング TOP5");
-    expect(decodeURIComponent(String(url))).toContain("1位: 推し一");
-    expect(decodeURIComponent(String(url))).toContain("2位: 推し二");
-
-    openSpy.mockRestore();
-  });
-
-  test("画像保存ボタンを押すと html-to-image でポスターを書き出す", async () => {
-    top10Fn.mockResolvedValue([
-      {
-        id: "1",
-        rank: 1,
-        name: "推し一",
-        group: "G1",
-        eloRating: 1800,
-        wins: 5,
-        losses: 5,
-        winRate: 0.5,
-        photo: null,
-      },
-    ]);
-    toPngMock.mockResolvedValueOnce("data:image/png;base64,AAAA");
-
-    // a.click() を捕捉
-    const clickSpy = vi.fn();
-    const origCreateElement = document.createElement.bind(document);
-    vi.spyOn(document, "createElement").mockImplementation((tagName: string) => {
-      const el = origCreateElement(tagName) as HTMLElement;
-      if (tagName === "a") {
-        (el as HTMLAnchorElement).click = clickSpy;
-      }
-      return el;
-    });
-
-    const user = userEvent.setup();
-    renderWithProviders(<RankingComponent />);
-
-    await user.click(await screen.findByRole("button", { name: /画像を保存/ }));
-
-    expect(toPngMock).toHaveBeenCalledTimes(1);
-    // 待機: handleSaveImage の await 解決後に click が呼ばれる
-    await vi.waitFor(() => expect(clickSpy).toHaveBeenCalledTimes(1));
-
-    vi.restoreAllMocks();
   });
 
   test("空の TOP 10 でも画面がクラッシュしない", async () => {

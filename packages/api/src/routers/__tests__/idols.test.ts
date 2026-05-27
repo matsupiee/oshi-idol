@@ -2,7 +2,8 @@ import { beforeEach, describe, expect, test } from "vitest";
 
 import type { TestDb } from "@oshi-idol/db/test";
 import { getTestDb, runMigrations } from "@oshi-idol/db/test";
-import { idolPhotos, idols } from "@oshi-idol/db/schema/idols";
+import { idolPhotos, idols, votes } from "@oshi-idol/db/schema/idols";
+import { user } from "@oshi-idol/db/schema/auth";
 
 import { t } from "../../index";
 import { idolsRouter } from "../idols";
@@ -79,7 +80,18 @@ describe("idols.battleQueue", () => {
     }
   });
 
-  test("excludeIdolIds で指定したアイドルはペアに含まれない", async () => {
+  test("過去に投票済みのアイドルはペアに含まれない", async () => {
+    const [testUser] = await db
+      .insert(user)
+      .values({
+        id: "test-user-id",
+        name: "匿名ユーザー",
+        email: "anon@test.com",
+        emailVerified: false,
+        isAnonymous: true,
+      })
+      .returning();
+
     const inserted = await db
       .insert(idols)
       .values([
@@ -90,19 +102,48 @@ describe("idols.battleQueue", () => {
       ])
       .returning();
 
-    for (const idol of inserted) {
-      await db
-        .insert(idolPhotos)
-        .values({ idolId: idol.id, imageUrl: `https://example.com/${idol.id}.jpg` });
-    }
+    const insertedPhotos = await db
+      .insert(idolPhotos)
+      .values(
+        inserted.map((idol) => ({
+          idolId: idol.id,
+          imageUrl: `https://example.com/${idol.id}.jpg`,
+        })),
+      )
+      .returning();
 
-    const excluded = [inserted[0]!.id, inserted[1]!.id];
-    const caller = createCaller({ auth: null, session: null, db, ipAddress: null });
-    const pairs = await caller.battleQueue({ excludeIdolIds: excluded, count: 1 });
+    const photoForA = insertedPhotos.find((p) => p.idolId === inserted[0]!.id)!;
+    const photoForB = insertedPhotos.find((p) => p.idolId === inserted[1]!.id)!;
+
+    await db.insert(votes).values({
+      winnerId: inserted[0]!.id,
+      loserId: inserted[1]!.id,
+      winnerPhotoId: photoForA.id,
+      loserPhotoId: photoForB.id,
+      userId: testUser!.id,
+    });
+
+    const mockSession = {
+      session: {
+        id: "test-session-id",
+        userId: testUser!.id,
+        expiresAt: new Date(Date.now() + 86400000),
+        token: "test-token",
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        ipAddress: null,
+        userAgent: null,
+      },
+      user: testUser!,
+    };
+
+    const caller = createCaller({ auth: null, session: mockSession, db, ipAddress: null });
+    const pairs = await caller.battleQueue({ count: 1 });
 
     expect(pairs).toHaveLength(1);
-    expect(excluded).not.toContain(pairs[0]!.idolA.id);
-    expect(excluded).not.toContain(pairs[0]!.idolB.id);
+    const votedIds = [inserted[0]!.id, inserted[1]!.id];
+    expect(votedIds).not.toContain(pairs[0]!.idolA.id);
+    expect(votedIds).not.toContain(pairs[0]!.idolB.id);
   });
 
   test("アイドルが 2 人未満の場合は NOT_FOUND を投げる", async () => {
@@ -142,7 +183,75 @@ describe("idols.battleQueue", () => {
     expect(pairs).toHaveLength(1);
   });
 
-  test("除外後に 2 体未満しか残らない場合は全プールにフォールバックして異なる 2 体を返す", async () => {
+  test("投票済みアイドルで 2 体未満しか残らない場合は全プールにフォールバックして異なる 2 体を返す", async () => {
+    const [testUser] = await db
+      .insert(user)
+      .values({
+        id: "test-user-fallback",
+        name: "匿名ユーザー",
+        email: "anon-fallback@test.com",
+        emailVerified: false,
+        isAnonymous: true,
+      })
+      .returning();
+
+    const inserted = await db
+      .insert(idols)
+      .values([
+        { name: "A", group: "G" },
+        { name: "B", group: "G" },
+      ])
+      .returning();
+
+    const insertedPhotos = await db
+      .insert(idolPhotos)
+      .values(
+        inserted.map((idol) => ({
+          idolId: idol.id,
+          imageUrl: `https://example.com/${idol.id}.jpg`,
+        })),
+      )
+      .returning();
+
+    const photoForA = insertedPhotos.find((p) => p.idolId === inserted[0]!.id)!;
+    const photoForB = insertedPhotos.find((p) => p.idolId === inserted[1]!.id)!;
+
+    // 2体とも投票済みにして除外後に 0 体になる状況を作る
+    await db.insert(votes).values({
+      winnerId: inserted[0]!.id,
+      loserId: inserted[1]!.id,
+      winnerPhotoId: photoForA.id,
+      loserPhotoId: photoForB.id,
+      userId: testUser!.id,
+    });
+
+    const mockSession = {
+      session: {
+        id: "test-session-fallback",
+        userId: testUser!.id,
+        expiresAt: new Date(Date.now() + 86400000),
+        token: "test-token-fallback",
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        ipAddress: null,
+        userAgent: null,
+      },
+      user: testUser!,
+    };
+
+    const caller = createCaller({ auth: null, session: mockSession, db, ipAddress: null });
+    // 全投票済みでもフォールバックして 2 体のペアを返す
+    const pairs = await caller.battleQueue({ count: 1 });
+
+    expect(pairs).toHaveLength(1);
+    const pair = pairs[0]!;
+    expect(pair.idolA.id).not.toBe(pair.idolB.id);
+    const allIds = inserted.map((i) => i.id);
+    expect(allIds).toContain(pair.idolA.id);
+    expect(allIds).toContain(pair.idolB.id);
+  });
+
+  test("session がない場合は除外なしで全アイドルを対象にする", async () => {
     const inserted = await db
       .insert(idols)
       .values([
@@ -158,17 +267,8 @@ describe("idols.battleQueue", () => {
     }
 
     const caller = createCaller({ auth: null, session: null, db, ipAddress: null });
-    // 1 体しか残らない除外リストでもフォールバックして 2 体のペアを返す
-    const pairs = await caller.battleQueue({
-      excludeIdolIds: [inserted[0]!.id],
-      count: 1,
-    });
+    const pairs = await caller.battleQueue({ count: 1 });
 
     expect(pairs).toHaveLength(1);
-    const pair = pairs[0]!;
-    expect(pair.idolA.id).not.toBe(pair.idolB.id);
-    const allIds = inserted.map((i) => i.id);
-    expect(allIds).toContain(pair.idolA.id);
-    expect(allIds).toContain(pair.idolB.id);
   });
 });
