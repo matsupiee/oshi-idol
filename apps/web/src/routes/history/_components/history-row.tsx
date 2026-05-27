@@ -1,3 +1,5 @@
+import { Link } from "@tanstack/react-router";
+
 import { VoteHistoryEntry } from "@/lib/vote-history";
 
 function formatVoteTime(value: string) {
@@ -41,17 +43,20 @@ export function HistoryRow({ entry, index }: { entry: VoteHistoryEntry; index: n
         {String(index + 1).padStart(2, "0")}
       </div>
       <div className="min-w-0 flex-1">
-        <div
-          className="truncate"
+        <Link
+          to="/idol/$idolId"
+          params={{ idolId: entry.winner.id }}
+          className="block truncate"
           style={{
             fontFamily: '"Bungee", monospace',
             fontSize: 18,
             color: "#fff",
             letterSpacing: "0.02em",
+            textDecoration: "none",
           }}
         >
           {entry.winner.name}
-        </div>
+        </Link>
         <div
           className="mt-1 truncate"
           style={{
@@ -60,7 +65,14 @@ export function HistoryRow({ entry, index }: { entry: VoteHistoryEntry; index: n
             color: "rgba(255,255,255,0.7)",
           }}
         >
-          {entry.loser.name} に勝利
+          <Link
+            to="/idol/$idolId"
+            params={{ idolId: entry.loser.id }}
+            style={{ color: "inherit", textDecoration: "none" }}
+          >
+            {entry.loser.name}
+          </Link>
+          {" に勝利"}
         </div>
         <div
           className="mt-1 truncate"

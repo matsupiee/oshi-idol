@@ -1,12 +1,38 @@
 import { TRPCError } from "@trpc/server";
 import { createDb } from "@oshi-idol/db";
 import { idols } from "@oshi-idol/db/schema/idols";
-import { desc, notInArray } from "drizzle-orm";
+import { desc, eq, notInArray } from "drizzle-orm";
 import { z } from "zod";
 
 import { publicProcedure, router } from "../index";
 
 export const idolsRouter = router({
+  byId: publicProcedure.input(z.object({ id: z.string() })).query(async ({ input, ctx }) => {
+    const db = ctx.db;
+    const idol = await db.query.idols.findFirst({
+      where: eq(idols.id, input.id),
+      with: { photos: true },
+    });
+
+    if (!idol) {
+      throw new TRPCError({ code: "NOT_FOUND", message: "Idol not found" });
+    }
+
+    const total = idol.wins + idol.losses;
+    const winRate = total === 0 ? 0 : idol.wins / total;
+
+    return {
+      id: idol.id,
+      name: idol.name,
+      group: idol.group,
+      eloRating: idol.eloRating,
+      wins: idol.wins,
+      losses: idol.losses,
+      winRate,
+      photos: idol.photos.map((p) => ({ id: p.id, imageUrl: p.imageUrl, sortOrder: p.sortOrder })),
+    };
+  }),
+
   list: publicProcedure.query(async () => {
     const db = createDb();
     const result = await db.query.idols.findMany({

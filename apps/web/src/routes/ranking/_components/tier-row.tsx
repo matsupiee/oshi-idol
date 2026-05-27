@@ -1,3 +1,5 @@
+import { Link } from "@tanstack/react-router";
+
 import { type RankIdol } from "../_utils/tier";
 
 export function TierRow({
@@ -31,14 +33,18 @@ export function TierRow({
         }}
       >
         {idols.map((idol) => (
-          <div
+          <Link
             key={idol.id}
+            to="/idol/$idolId"
+            params={{ idolId: idol.id }}
             className="relative overflow-hidden"
             style={{
               width: 44,
               height: 44,
               borderRadius: 3,
               border: `1px solid ${color}aa`,
+              textDecoration: "none",
+              display: "block",
             }}
           >
             {idol.photo?.imageUrl ? (
@@ -68,7 +74,7 @@ export function TierRow({
             >
               {idol.name.slice(0, 4)}
             </div>
-          </div>
+          </Link>
         ))}
       </div>
     </div>

@@ -1,3 +1,4 @@
+import React from "react";
 import { describe, expect, test, vi, beforeEach } from "vitest";
 import { screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
@@ -10,6 +11,15 @@ vi.mock("@tanstack/react-router", async (importOriginal) => {
     ...actual,
     createFileRoute: () => () => ({}),
     useNavigate: () => mockNavigate,
+    Link: ({
+      children,
+      to: _to,
+      params: _params,
+      ...rest
+    }: React.AnchorHTMLAttributes<HTMLAnchorElement> & {
+      to?: string;
+      params?: Record<string, string>;
+    }) => <a {...rest}>{children}</a>,
   };
 });
 
@@ -51,8 +61,10 @@ describe("HistoryComponent (投票履歴画面)", () => {
     const rows = screen.getAllByRole("article");
     expect(rows).toHaveLength(2);
     expect(within(rows[0]!).getByText("アイドルC")).toBeInTheDocument();
-    expect(within(rows[0]!).getByText("アイドルD に勝利")).toBeInTheDocument();
+    expect(within(rows[0]!).getByText("アイドルD")).toBeInTheDocument();
+    expect(within(rows[0]!).getByText(/に勝利/)).toBeInTheDocument();
     expect(within(rows[1]!).getByText("アイドルA")).toBeInTheDocument();
-    expect(within(rows[1]!).getByText("アイドルB に勝利")).toBeInTheDocument();
+    expect(within(rows[1]!).getByText("アイドルB")).toBeInTheDocument();
+    expect(within(rows[1]!).getByText(/に勝利/)).toBeInTheDocument();
   });
 });

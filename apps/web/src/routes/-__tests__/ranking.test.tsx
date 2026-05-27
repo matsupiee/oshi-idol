@@ -1,3 +1,4 @@
+import React from "react";
 import { describe, expect, test, vi, beforeEach } from "vitest";
 import { screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
@@ -10,6 +11,15 @@ vi.mock("@tanstack/react-router", async (importOriginal) => {
     ...actual,
     createFileRoute: () => () => ({}),
     useNavigate: () => mockNavigate,
+    Link: ({
+      children,
+      to: _to,
+      params: _params,
+      ...rest
+    }: React.AnchorHTMLAttributes<HTMLAnchorElement> & {
+      to?: string;
+      params?: Record<string, string>;
+    }) => <a {...rest}>{children}</a>,
   };
 });
 
