@@ -2,13 +2,12 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useCallback, useEffect, useRef, useState } from "react";
 
-import { getSessionId } from "@/lib/session";
 import { addVoteHistoryEntry } from "@/lib/vote-history";
 import { useTRPC } from "@/utils/trpc";
 import { BattlePanel, type IdolData } from "./_components/battle-panel";
 import { HeartBurst } from "./_components/heart-burst";
 
-export const Route = createFileRoute("/battle")({
+export const Route = createFileRoute("/battle/")({
   component: BattleComponent,
 });
 
@@ -37,11 +36,7 @@ export function BattleComponent() {
   const [queue, setQueue] = useState<BattlePair[]>([]);
   const burstIdRef = useRef(0);
   const exitTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const sessionId = getSessionId();
-
-  const battleQueue = useQuery(
-    trpc.idols.battleQueue.queryOptions({ sessionId, count: QUEUE_SIZE }),
-  );
+  const battleQueue = useQuery(trpc.idols.battleQueue.queryOptions({ count: QUEUE_SIZE }));
   const submitVote = useMutation(trpc.votes.submit.mutationOptions());
 
   // 取得したキューをローカルstateに展開し、2番目以降の画像をプリロード
@@ -83,7 +78,6 @@ export function BattleComponent() {
           loserId: loser.id,
           winnerPhotoId: winnerPhotoId ?? "",
           loserPhotoId: loserPhotoId ?? "",
-          sessionId,
         });
         addVoteHistoryEntry({
           winner: {
@@ -123,7 +117,7 @@ export function BattleComponent() {
         setBursts([]);
       }
     },
-    [phase, voting, voteCount, sessionId, submitVote, navigate],
+    [phase, voting, voteCount, submitVote, navigate],
   );
 
   if (battleQueue.isLoading) {

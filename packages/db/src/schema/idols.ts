@@ -2,6 +2,8 @@ import { createId } from "@paralleldrive/cuid2";
 import { relations, sql } from "drizzle-orm";
 import { index, integer, sqliteTable, text } from "drizzle-orm/sqlite-core";
 
+import { user } from "./auth";
+
 export const idols = sqliteTable("idols", {
   id: text("id")
     .$defaultFn(() => createId())
@@ -61,7 +63,10 @@ export const votes = sqliteTable(
     loserPhotoId: text("loser_photo_id")
       .notNull()
       .references(() => idolPhotos.id),
-    sessionId: text("session_id").notNull(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id),
+    ipAddress: text("ip_address"),
     createdAt: integer("created_at", { mode: "timestamp_ms" })
       .default(sql`(cast(unixepoch('subsecond') * 1000 as integer))`)
       .notNull(),
@@ -73,7 +78,7 @@ export const votes = sqliteTable(
   (table) => [
     index("votes_winnerId_idx").on(table.winnerId),
     index("votes_loserId_idx").on(table.loserId),
-    index("votes_sessionId_idx").on(table.sessionId),
+    index("votes_userId_idx").on(table.userId),
   ],
 );
 
@@ -108,5 +113,9 @@ export const votesRelations = relations(votes, ({ one }) => ({
   loserPhoto: one(idolPhotos, {
     fields: [votes.loserPhotoId],
     references: [idolPhotos.id],
+  }),
+  user: one(user, {
+    fields: [votes.userId],
+    references: [user.id],
   }),
 }));

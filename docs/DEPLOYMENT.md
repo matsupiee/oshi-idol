@@ -119,3 +119,18 @@ bun run destroy
 ```
 
 D1 データベース・R2 バケット・Worker がすべて削除される。**データも消えるため注意。**
+
+---
+
+## マイグレーション 0003 のデプロイ手順
+
+`0003_tired_iceman.sql` は votes テーブルを session_id から user_id(FK) に変更する。
+SQLite の仕様上、テーブルを再作成する際にデータコピーが試みられるが、
+旧テーブルには `user_id` が存在しないため、**マイグレーション実行前に votes テーブルを空にする必要がある**。
+
+```sql
+DELETE FROM votes;
+```
+
+を D1 に対して実行してからマイグレーションを流すこと。
+既存の votes データは意図的に破棄する設計（localStorage ベースの session_id は better-auth の user_id に変換不可）。

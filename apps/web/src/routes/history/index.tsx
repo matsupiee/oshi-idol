@@ -6,7 +6,7 @@ import { getVoteHistory } from "@/lib/vote-history";
 import { EmptyHistory } from "./_components/empty-history";
 import { HistoryRow } from "./_components/history-row";
 
-export const Route = createFileRoute("/history")({
+export const Route = createFileRoute("/history/")({
   component: HistoryComponent,
 });
 
