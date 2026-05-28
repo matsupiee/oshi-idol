@@ -1,6 +1,6 @@
 import { TRPCError } from "@trpc/server";
 import { createDb } from "@oshi-idol/db";
-import { idols } from "@oshi-idol/db/schema/idols";
+import { idols, votes } from "@oshi-idol/db/schema/idols";
 import { desc, eq, notInArray } from "drizzle-orm";
 import { z } from "zod";
 
@@ -57,14 +57,28 @@ export const idolsRouter = router({
   battleQueue: publicProcedure
     .input(
       z.object({
-        excludeIdolIds: z.array(z.string()).optional(),
         count: z.number().min(1).max(20).default(20),
       }),
     )
     .query(async ({ input, ctx }) => {
       const db = ctx.db;
-      const excludeIds = input.excludeIdolIds ?? [];
       const count = input.count;
+
+      let excludeIds: string[] = [];
+      if (ctx.session) {
+        const userId = ctx.session.user.id;
+        const userVotes = await db
+          .select({ winnerId: votes.winnerId, loserId: votes.loserId })
+          .from(votes)
+          .where(eq(votes.userId, userId));
+
+        const votedIds = new Set<string>();
+        for (const v of userVotes) {
+          votedIds.add(v.winnerId);
+          votedIds.add(v.loserId);
+        }
+        excludeIds = [...votedIds];
+      }
 
       let availableIdols = await db.query.idols.findMany({
         with: { photos: true },
