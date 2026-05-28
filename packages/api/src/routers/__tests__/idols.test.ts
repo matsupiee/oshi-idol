@@ -10,6 +10,56 @@ import { idolsRouter } from "../idols";
 
 const createCaller = t.createCallerFactory(idolsRouter);
 
+describe("idols.byId", () => {
+  let db: TestDb;
+
+  beforeEach(async () => {
+    db = getTestDb();
+    await runMigrations(db);
+  });
+
+  test("存在するアイドルを返す", async () => {
+    const [idol] = await db
+      .insert(idols)
+      .values({ name: "Sakura", group: "LE SSERAFIM", eloRating: 1620, wins: 127, losses: 23 })
+      .returning();
+
+    await db
+      .insert(idolPhotos)
+      .values({ idolId: idol!.id, imageUrl: "https://example.com/sakura.jpg", sortOrder: 0 });
+
+    const caller = createCaller({ auth: null, session: null, db });
+    const result = await caller.byId({ id: idol!.id });
+
+    expect(result.id).toBe(idol!.id);
+    expect(result.name).toBe("Sakura");
+    expect(result.group).toBe("LE SSERAFIM");
+    expect(result.eloRating).toBe(1620);
+    expect(result.wins).toBe(127);
+    expect(result.losses).toBe(23);
+    expect(Math.round(result.winRate * 100)).toBe(85);
+    expect(result.photos).toHaveLength(1);
+    expect(result.photos[0]!.imageUrl).toBe("https://example.com/sakura.jpg");
+  });
+
+  test("存在しない id は NOT_FOUND を投げる", async () => {
+    const caller = createCaller({ auth: null, session: null, db });
+    await expect(caller.byId({ id: "nonexistent" })).rejects.toThrow(/NOT_FOUND|Idol not found/);
+  });
+
+  test("wins + losses が 0 のとき winRate は 0 を返す", async () => {
+    const [idol] = await db
+      .insert(idols)
+      .values({ name: "NewIdol", group: "G", wins: 0, losses: 0 })
+      .returning();
+
+    const caller = createCaller({ auth: null, session: null, db });
+    const result = await caller.byId({ id: idol!.id });
+
+    expect(result.winRate).toBe(0);
+  });
+});
+
 describe("idols.battleQueue", () => {
   let db: TestDb;
 

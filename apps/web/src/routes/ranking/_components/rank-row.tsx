@@ -1,3 +1,5 @@
+import { Link } from "@tanstack/react-router";
+
 import { getTier, type RankIdol } from "../_utils/tier";
 
 export function RankRow({ idol }: { idol: RankIdol }) {
@@ -5,9 +7,12 @@ export function RankRow({ idol }: { idol: RankIdol }) {
   const tier = getTier(idol.eloRating);
 
   return (
-    <div
+    <Link
+      to="/idol/$idolId"
+      params={{ idolId: idol.id }}
       className="relative flex items-center gap-3"
       style={{
+        textDecoration: "none",
         padding: isTop3 ? 10 : 8,
         background: isTop3
           ? `linear-gradient(90deg, ${tier.color}22 0%, transparent 70%)`
@@ -129,6 +134,6 @@ export function RankRow({ idol }: { idol: RankIdol }) {
           {Math.round(idol.winRate * 100)}%
         </div>
       </div>
-    </div>
+    </Link>
   );
 }

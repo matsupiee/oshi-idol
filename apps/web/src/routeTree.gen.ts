@@ -13,6 +13,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as RankingIndexRouteImport } from './routes/ranking/index'
 import { Route as HistoryIndexRouteImport } from './routes/history/index'
 import { Route as BattleIndexRouteImport } from './routes/battle/index'
+import { Route as IdolIdolIdRouteImport } from './routes/idol/$idolId'
 import { Route as ApiTrpcSplatRouteImport } from './routes/api/trpc/$'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
 
@@ -36,6 +37,11 @@ const BattleIndexRoute = BattleIndexRouteImport.update({
   path: '/battle/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const IdolIdolIdRoute = IdolIdolIdRouteImport.update({
+  id: '/idol/$idolId',
+  path: '/idol/$idolId',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiTrpcSplatRoute = ApiTrpcSplatRouteImport.update({
   id: '/api/trpc/$',
   path: '/api/trpc/$',
@@ -49,6 +55,7 @@ const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/idol/$idolId': typeof IdolIdolIdRoute
   '/battle/': typeof BattleIndexRoute
   '/history/': typeof HistoryIndexRoute
   '/ranking/': typeof RankingIndexRoute
@@ -57,6 +64,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/idol/$idolId': typeof IdolIdolIdRoute
   '/battle': typeof BattleIndexRoute
   '/history': typeof HistoryIndexRoute
   '/ranking': typeof RankingIndexRoute
@@ -66,6 +74,7 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/idol/$idolId': typeof IdolIdolIdRoute
   '/battle/': typeof BattleIndexRoute
   '/history/': typeof HistoryIndexRoute
   '/ranking/': typeof RankingIndexRoute
@@ -76,16 +85,25 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/idol/$idolId'
     | '/battle/'
     | '/history/'
     | '/ranking/'
     | '/api/auth/$'
     | '/api/trpc/$'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/battle' | '/history' | '/ranking' | '/api/auth/$' | '/api/trpc/$'
+  to:
+    | '/'
+    | '/idol/$idolId'
+    | '/battle'
+    | '/history'
+    | '/ranking'
+    | '/api/auth/$'
+    | '/api/trpc/$'
   id:
     | '__root__'
     | '/'
+    | '/idol/$idolId'
     | '/battle/'
     | '/history/'
     | '/ranking/'
@@ -95,6 +113,7 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  IdolIdolIdRoute: typeof IdolIdolIdRoute
   BattleIndexRoute: typeof BattleIndexRoute
   HistoryIndexRoute: typeof HistoryIndexRoute
   RankingIndexRoute: typeof RankingIndexRoute
@@ -132,6 +151,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof BattleIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/idol/$idolId': {
+      id: '/idol/$idolId'
+      path: '/idol/$idolId'
+      fullPath: '/idol/$idolId'
+      preLoaderRoute: typeof IdolIdolIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/trpc/$': {
       id: '/api/trpc/$'
       path: '/api/trpc/$'
@@ -151,6 +177,7 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  IdolIdolIdRoute: IdolIdolIdRoute,
   BattleIndexRoute: BattleIndexRoute,
   HistoryIndexRoute: HistoryIndexRoute,
   RankingIndexRoute: RankingIndexRoute,
